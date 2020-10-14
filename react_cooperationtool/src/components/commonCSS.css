@@ -1,0 +1,2 @@
+.defaultDiv {height:auto; width:50%; border:1px solid;}
+.scrollDiv {max-height:700px; width:100%; border:none; overflow: scroll;}

@@ -1,0 +1,188 @@
+import React, { Component} from 'react';
+import axios from 'axios';
+import './commonCSS.css';
+import Util from './Util';
+
+export default class ProjectItem extends Component{
+    constructor(props) {
+        super(props);
+
+        this.state= {
+            pjtName: "",
+            grpName: "",
+            grpMember: "",
+            boardList: [],
+        }
+
+        if (props!==undefined && props.grpInfo && props.pjtName && props.pjtName!=="") {
+            const grpInfo = props.grpInfo;
+
+            this.state.pjtName = props.pjtName;
+            this.state.grpName = grpInfo.grpName;
+            this.state.grpMember = grpInfo.grpMember.join(', ');
+        } else {
+            alert('프로젝트 및 그룹을 선택해주세요.');
+            document.location.href = '/';
+        } 
+    }    
+
+    addGrpMember = ()=> {
+        const elem_memberId = document.getElementById('input_grpMemberId');
+        const memberId = elem_memberId!==undefined? elem_memberId.value : '';
+
+        const {pjtName} = this.state;
+        const {grpName} = this.state;
+
+        if (memberId==='') {
+            return alert('참여자 ID를 입력 후 시도해주세요.');
+        }
+
+        const url = this.props.apiURL + '/baord/' + pjtName + '/' + grpName + '/addGrpMember';
+        axios({
+			method: 'post',
+			url: url,
+            withCredentials: true,
+            data: {
+                memberId: memberId
+            }
+		})
+		.then((result)=> {
+            document.getElementById('msgDiv').innerHTML = result.msg;
+
+            if (!result.isExec) {
+                return alert(result.msg);
+			}
+	
+            // 추가된 참여자 세팅
+            let grpMember = this.state.grpMember;
+            grpMember += ", " + memberId;
+
+            this.setState({
+                grpMember: grpMember
+            });
+		})
+		.catch((error)=> {
+            const status = error.response.status;
+            const msg = error.response.data.msg;
+
+            alert(msg);
+            // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
+            if (status===405) {
+                return document.location.href = '/';
+            }
+
+			return console.error(error);
+        });
+	}
+	
+	toggleInterval = (syncBoard)=> {
+		;
+	}
+
+    syncBoard = ()=> {
+		axios({
+			method: 'post',
+			url:'/board/' + this.state.pjtName + '/' + this.state.grpName + '/syncBoard',
+			withCredentials: true,
+			data: {
+                syncTime: document.getElementById('syntTime').value  // 최종 동기화 시간을 전달하여 그 후의 데이터만 읽어오도록 한다.
+            },
+		})
+		.then((response) => {
+			const result = response.data;
+
+			if (!result.isExec) {
+				return alert(result.msg);
+			}
+
+			let isBottom = false;
+			const scrollTop = document.getElementById('boardDiv').scrollTop;	// 현재 위치
+			const scrollHeight = document.getElementById('boardDiv').scrollHeight;	// 스크롤 높이
+			if ( scrollTop === scrollHeight -700) {    // 스크롤 높이(700px) 만큼 오차가 생겨 조정
+				isBottom = true;
+			}
+
+			// 추가된 게시글이 있으면 추가
+			if (result.boardList) {
+				//const boardList = this.state.boardList.concat(result.boardList);	// 이전 게시글 + 추가된 게시글
+
+				const boardList = result.boardList;	// 추가된 게시글
+				this.setState({
+					boardList: boardList
+				});
+
+				// 스크롤 위치가 맨 아래였을 때만 게시글 추가 후 스크롤 이동.
+				if (isBottom) {
+					document.getElementById('boardDiv').scrollTop = document.getElementById('boardDiv').scrollHeight;
+				}
+			}
+
+			// 동기화 시간 갱신
+			document.getElementById('syncTime').value = result.syncTime;
+		})
+		.catch((error)=> {
+            const msg = error.response.data.msg;
+
+			alert(msg);
+			
+			return console.error(error);
+		});
+	}
+	
+	addPost = ()=> {
+		;
+	}
+
+    render() {
+		Util.startInterval(1, this.syncBoard);
+
+		// state 중 boardList 만 가져옴
+		const {boardList} = this.state;
+		const li_boardList = boardList.map(
+			(board, i) => (
+				<div class="defaultDiv" style={{width: "100%"}}>
+					<ul>
+						<li>ID: {board.userId}</li>
+						<li>작성일: {board.reg_dt}</li>
+						<li>내용 <textarea name="contents" rows="3" readOnly style={{resize: 'none', width: '90%'}}>{board.contents}</textarea></li>
+					</ul>
+				</div>
+			)
+		);
+
+		let boardElem = document.getElementById('boardDiv');
+		if (boardElem !== null) {
+			boardElem.innerHTML += li_boardList;
+		}
+		
+        return (
+			<div>
+				<div id="div_grpInfo">
+					<h3>[그룹 정보]</h3>
+					<div className="defaultDiv">
+						<ul>
+							<li>그룹 이름 : {this.state.grpName}</li>
+							<li>그룹 참여자 : {this.state.grpMember}</li>
+							참여자 추가 : <input type="text" id="input_grpMemberId" /><input type="button" value="추가" onClick={this.addGrpMember}/>
+						</ul>
+					</div>
+				</div>
+
+				<div id="div_boardInfo">
+					<h3>[{this.state.grpName}그룹의 게시글]</h3>
+					<input type="button" id="syncBoard" value="게시글 동기화 시작" onClick={()=> {this.toggleInterval(this.syncBoard)}}/>
+					동기화 시간 : <input type="text" id="syncTime" readOnly style={{border: 'none'}}/>
+					<div className="defaultDiv">
+						<div className="scrollDiv" id="boardDiv" style={{overflowX: "hidden"}}></div>
+						<div className="defaultDiv" style={{width: '100%'}}>
+							<ul>
+								<li>내용 <textarea id="board_contents" rows="3" style={{resize: 'none', width: '90%'}}></textarea></li>
+								<input type="button" id="btn_addPost" value="올리기" onClick={this.addPost}/>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+        )
+    }
+}
