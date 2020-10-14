@@ -11,7 +11,9 @@ export default class ProjectItem extends Component{
             pjtName: "",
             grpName: "",
             grpMember: "",
-            boardList: [],
+			boardList: [],
+			syncTime: '',
+			value_syncBoard: '게시글 동기화 시작'
         }
 
         if (props!==undefined && props.grpInfo && props.pjtName && props.pjtName!=="") {
@@ -75,58 +77,75 @@ export default class ProjectItem extends Component{
         });
 	}
 	
-	toggleInterval = (syncBoard)=> {
-		;
+	toggleInterval = (func)=> {
+		const key = Object.keys(func)[0];
+		const timerId = Util.timerObj[key];
+
+		if (timerId == null && this.state.grpName!=null) {
+			Util.startInterval(1, func);
+			this.setState({
+				value_syncBoard: '게시글 동기화 중지'
+			});
+        } 
+        else if (timerId){
+			Util.stopInterval(func);
+			
+			this.setState({
+				value_syncBoard: '게시글 동기화 시작'
+			});
+        }
+        else {
+            //alert('group Select Plz.');
+        }
 	}
 
-    syncBoard = ()=> {
-		axios({
-			method: 'post',
-			url:'/board/' + this.state.pjtName + '/' + this.state.grpName + '/syncBoard',
-			withCredentials: true,
-			data: {
-                syncTime: document.getElementById('syntTime').value  // 최종 동기화 시간을 전달하여 그 후의 데이터만 읽어오도록 한다.
-            },
-		})
-		.then((response) => {
-			const result = response.data;
+    syncBoard = {
+		syncBoard : ()=> {
+			axios({
+				method: 'post',
+				url:this.props.apiURL + '/board/' + this.state.pjtName + '/' + this.state.grpName + '/syncBoard',
+				withCredentials: true,
+				data: {
+					syncTime: this.state.syncTime  // 최종 동기화 시간을 전달하여 그 후의 데이터만 읽어오도록 한다.
+				},
+			})
+			.then((response) => {
+				const result = response.data;
 
-			if (!result.isExec) {
-				return alert(result.msg);
-			}
-
-			let isBottom = false;
-			const scrollTop = document.getElementById('boardDiv').scrollTop;	// 현재 위치
-			const scrollHeight = document.getElementById('boardDiv').scrollHeight;	// 스크롤 높이
-			if ( scrollTop === scrollHeight -700) {    // 스크롤 높이(700px) 만큼 오차가 생겨 조정
-				isBottom = true;
-			}
-
-			// 추가된 게시글이 있으면 추가
-			if (result.boardList) {
-				//const boardList = this.state.boardList.concat(result.boardList);	// 이전 게시글 + 추가된 게시글
-
-				const boardList = result.boardList;	// 추가된 게시글
-				this.setState({
-					boardList: boardList
-				});
-
-				// 스크롤 위치가 맨 아래였을 때만 게시글 추가 후 스크롤 이동.
-				if (isBottom) {
-					document.getElementById('boardDiv').scrollTop = document.getElementById('boardDiv').scrollHeight;
+				if (!result.isExec) {
+					return alert(result.msg);
 				}
-			}
 
-			// 동기화 시간 갱신
-			document.getElementById('syncTime').value = result.syncTime;
-		})
-		.catch((error)=> {
-            const msg = error.response.data.msg;
+				let isBottom = false;
+				const scrollTop = document.getElementById('boardDiv').scrollTop;	// 현재 위치
+				const scrollHeight = document.getElementById('boardDiv').scrollHeight;	// 스크롤 높이
+				if ( scrollTop === scrollHeight -700) {    // 스크롤 높이(700px) 만큼 오차가 생겨 조정
+					isBottom = true;
+				}
 
-			alert(msg);
-			
-			return console.error(error);
-		});
+				// 추가된 게시글이 있으면 추가
+				if (result.boardList) {
+					//const boardList = this.state.boardList.concat(result.boardList);	// 이전 게시글 + 추가된 게시글
+
+					const boardList = result.boardList;	// 추가된 게시글
+
+					// 게시글 추가 및 동기화 시간 갱신
+					this.setState({
+						boardList: boardList,
+						syncTime: result.syncTime
+					});
+
+					// 스크롤 위치가 맨 아래였을 때만 게시글 추가 후 스크롤 이동.
+					if (isBottom) {
+						document.getElementById('boardDiv').scrollTop = document.getElementById('boardDiv').scrollHeight;
+					}
+				}
+			})
+			.catch((error)=> {
+				Util.stopInterval(this.syncBoard);
+				return console.error(error);
+			});
+		}
 	}
 	
 	addPost = ()=> {
@@ -134,8 +153,6 @@ export default class ProjectItem extends Component{
 	}
 
     render() {
-		Util.startInterval(1, this.syncBoard);
-
 		// state 중 boardList 만 가져옴
 		const {boardList} = this.state;
 		const li_boardList = boardList.map(
@@ -170,8 +187,8 @@ export default class ProjectItem extends Component{
 
 				<div id="div_boardInfo">
 					<h3>[{this.state.grpName}그룹의 게시글]</h3>
-					<input type="button" id="syncBoard" value="게시글 동기화 시작" onClick={()=> {this.toggleInterval(this.syncBoard)}}/>
-					동기화 시간 : <input type="text" id="syncTime" readOnly style={{border: 'none'}}/>
+					<input type="button" id="syncBoard" value={this.state.value_syncBoard} onClick={()=> {this.toggleInterval(this.syncBoard)}}/>
+					동기화 시간 : {this.state.syncTime}
 					<div className="defaultDiv">
 						<div className="scrollDiv" id="boardDiv" style={{overflowX: "hidden"}}></div>
 						<div className="defaultDiv" style={{width: '100%'}}>

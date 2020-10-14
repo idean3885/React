@@ -17,21 +17,19 @@ export default class SignInItem extends Component{
             return alert('값을 모두 입력 후 시도해 주세요.');
         }
 
-        user_id = user_id.value;
-        user_pwd = user_pwd.value;
-        user_name = user_name.value;
-
         axios({
 			method: 'post',
 			url: this.props.apiURL + '/auth/signup',
             withCredentials: true,
             data: {
-                user_id: user_id, 
-                user_pwd: user_pwd, 
-                user_name: user_name
+                user_id: user_id.value, 
+                user_pwd: user_pwd.value, 
+                user_name: user_name.value
             }
 		})
-		.then((result)=> {
+		.then((response)=> {
+            const result = response.data;
+            
 			if (!result.isExec) {
                 user_pwd.value = '';    // 입력한 비밀번호 지우기
 

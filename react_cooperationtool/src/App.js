@@ -75,7 +75,7 @@ class App extends Component {
 					<SignInItem apiURL={this.props.apiURL} viewUserInfo={this.viewUserInfo}/>
 				}
 				{this.state.isViewSignUp &&
-					<SignUpItem/>
+					<SignUpItem apiURL={this.props.apiURL}/>
 				}
 				{this.state.isViewProject &&
 					<ProjectItem apiURL={this.props.apiURL} pjtInfo={this.state.pjtInfo}/>

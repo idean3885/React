@@ -8,6 +8,7 @@ export default class UserInfoItem extends Component {
 	state = {
 		debugStyle: "block",
 		signInStyle: "block",
+		signUpStyle: "block",
 		signOutStyle: "none",
 		userInfoStyle: "none",
 		userId: "",
@@ -118,44 +119,58 @@ export default class UserInfoItem extends Component {
 	
 	// 사용자 정보 불러오기
 	// 화살표 함수로 만들 경우 this가 자동으로 바인딩된다.
-	getLoginUserinfo = ()=> {
-		axios({
-			method: 'post',
-			url: this.props.apiURL + '/auth/getLoginUser',
-			withCredentials: true
-		})
-		.then((response)=> {
-			const result = response.data;
-			document.getElementById('msgDiv').innerHTML = result.msg;
-			
-			// 사용자 정보가 조회되지 않는 경우 
-			if (!result.isExec) {
-				// 알림
-				console.log(result.msg);
-				Util.stopInterval(this.getLoginUserinfo);
+	getLoginUserinfo = {
+		getLoginUserinfo :()=> {
+			axios({
+				method: 'post',
+				url: this.props.apiURL + '/auth/getLoginUser',
+				withCredentials: true
+			})
+			.then((response)=> {
+				const result = response.data;
+				document.getElementById('msgDiv').innerHTML = result.msg;
 				
-				return this.viewSignIn();
-			}
-	
-			// 사용자 정보가 조회된 경우(로그인한 경우)
-			if (result.userInfo) {
-				const loginUser = result.userInfo;
-	
-				// 화면 갱신 -> setState 할 경우 re rendering 됨.
-				this.setState({
-					signInStyle: "none",
-					signOutStyle: "block",
-					userInfoStyle: "block",
-					userId: loginUser.userId,
-					userName: loginUser.userName,
-					pjtList: loginUser.joinProjects
-				});
-			}
-		})
-		.catch((error)=> {
-			Util.stopInterval(this.getLoginUserinfo);
-			return console.error(error);
-		});
+				// 사용자 정보가 조회되지 않는 경우 
+				if (!result.isExec) {
+					// 알림
+					console.log(result.msg);
+					Util.stopInterval(this.getLoginUserinfo);
+
+					// 사용자 정보 화면 갱신 후 로그인 화면 진입
+					this.setState({
+						signInStyle: "block",
+						signUpStyle: "block",
+						signOutStyle: "none",
+						userInfoStyle: "none",
+						userId: "",
+						userName: "",
+						pjtList: []
+					});
+					
+					return this.viewSignIn();
+				}
+		
+				// 사용자 정보가 조회된 경우(로그인한 경우)
+				if (result.userInfo) {
+					const loginUser = result.userInfo;
+		
+					// 화면 갱신 -> setState 할 경우 re rendering 됨.
+					this.setState({
+						signInStyle: "none",
+						signUpStyle: 'none',
+						signOutStyle: "block",
+						userInfoStyle: "block",
+						userId: loginUser.userId,
+						userName: loginUser.userName,
+						pjtList: loginUser.joinProjects
+					});
+				}
+			})
+			.catch((error)=> {
+				Util.stopInterval(this.getLoginUserinfo);
+				return console.error(error);
+			});
+		}
 	}
 
 	render(){
@@ -198,10 +213,8 @@ export default class UserInfoItem extends Component {
 				<p>
 					<a href="/">메인으로 가기</a>
 				</p>
-				<div style={{display: this.state.signInStyle}}>
-					<a href="#!" onClick={this.viewSignIn}> 로그인 </a>
-					<a href="#!" onClick={this.viewSignUp}> 회원가입 </a>
-				</div>
+				<a href="#!" onClick={this.viewSignIn} style={{display: this.state.signInStyle}}> 로그인 </a>
+				<a href="#!" onClick={this.viewSignUp} style={{display: this.state.signUpStyle}}> 회원가입 </a>
 				<a href="#!" onClick={this.signOut} style={{display: this.state.signOutStyle}}> 로그아웃 </a>
 	
 				<div id="div_debug" style={{display: this.state.debugStyle}}>
