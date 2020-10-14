@@ -187,7 +187,8 @@ export default class ProjectItem extends Component{
 
 				<div id="div_boardInfo">
 					<h3>[{this.state.grpName}그룹의 게시글]</h3>
-					<input type="button" id="syncBoard" value={this.state.value_syncBoard} onClick={()=> {this.toggleInterval(this.syncBoard)}}/>
+					<input type="button" id="syncBoard" value="동기화 시작" onClick={()=> {Util.startInterval(1, this.syncBoard)}}/>
+					<input type="button" id="syncBoard" value="동기화 중지" onClick={()=> {Util.stopInterval(this.syncBoard);}}/>
 					동기화 시간 : {this.state.syncTime}
 					<div className="defaultDiv">
 						<div className="scrollDiv" id="boardDiv" style={{overflowX: "hidden"}}></div>
