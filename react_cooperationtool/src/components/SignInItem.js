@@ -12,8 +12,7 @@ export default class SignInItem extends Component{
         this.signIn = this.signIn.bind(this);
     }
 
-    viewUserInfo = e=> {
-        //e.preventDefault();
+    viewUserInfo = ()=> {
         this.props.viewUserInfo();
     }
 
@@ -38,8 +37,9 @@ export default class SignInItem extends Component{
                 user_pwd: user_pwd
             }
 		})
-		.then((response)=> {
-            const result = response.data;
+		.then((res)=> {
+            const result = res.data;
+            document.getElementById('msgDiv').innerHTML = result.msg;
 
             if (!result.isExec) {
 				elem_userPwd.value = '';    // 입력한 비밀번호 지우기
@@ -56,13 +56,22 @@ export default class SignInItem extends Component{
         });
     }
 
+    // 비밀번호 입력 keyPress 이벤트 등록
+    onKeyPress_pwd = e=> {
+        // 엔터키 입력 시
+		if (e.which===13) {
+			e.preventDefault();
+			this.signIn(); // 로그인 진행
+		}
+    }
+
     render() {
         return (
             <div id="div_signIn">
                 <h3> [로그인 화면] </h3>
                 <div className="defaultDiv">
                     <div><input type="text" id="user_id" placeholder="ID 입력"/></div>
-                    <div><input type="password" id="user_pwd" placeholder="PWD 입력"/></div>
+                    <div><input type="password" id="user_pwd" placeholder="PWD 입력" onKeyPress={this.onKeyPress_pwd}/></div>
                     <input type="button" value="로그인" onClick={this.signIn}/>
                 </div>
              </div>

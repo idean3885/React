@@ -16,6 +16,7 @@ export default class ProjectItem extends Component{
 			value_syncBoard: '게시글 동기화 시작'
         }
 
+		// 그룹 정보 설정 | 메인화면으로 리다이렉트
         if (props!==undefined && props.grpInfo && props.pjtName && props.pjtName!=="") {
             const grpInfo = props.grpInfo;
 
@@ -25,11 +26,16 @@ export default class ProjectItem extends Component{
         } else {
             alert('프로젝트 및 그룹을 선택해주세요.');
             document.location.href = '/';
-        } 
+		}
+
+		// 인터벌 중지
+		// 기존에 동기화가 진행 중일 수도 있기 때문에 일단 중지시킨다.
+		Util.stopInterval(this.syncBoard);
     }    
 
+	// 그룹멤버 추가
     addGrpMember = ()=> {
-        const elem_memberId = document.getElementById('input_grpMemberId');
+        let elem_memberId = document.getElementById('input_grpMemberId');
         const memberId = elem_memberId!==undefined? elem_memberId.value : '';
 
         const {pjtName} = this.state;
@@ -39,7 +45,7 @@ export default class ProjectItem extends Component{
             return alert('참여자 ID를 입력 후 시도해주세요.');
         }
 
-        const url = this.props.apiURL + '/baord/' + pjtName + '/' + grpName + '/addGrpMember';
+        const url = this.props.apiURL + '/board/' + pjtName + '/' + grpName + '/addGrpMember';
         axios({
 			method: 'post',
 			url: url,
@@ -51,8 +57,9 @@ export default class ProjectItem extends Component{
 		.then((result)=> {
             document.getElementById('msgDiv').innerHTML = result.msg;
 
+			alert(result.msg);
             if (!result.isExec) {
-                return alert(result.msg);
+                return;
 			}
 	
             // 추가된 참여자 세팅
@@ -61,7 +68,10 @@ export default class ProjectItem extends Component{
 
             this.setState({
                 grpMember: grpMember
-            });
+			});
+			
+			// 입력한 사용자 명 지우기
+			elem_memberId.value = '';
 		})
 		.catch((error)=> {
             const status = error.response.status;
@@ -77,6 +87,9 @@ export default class ProjectItem extends Component{
         });
 	}
 	
+	// 동기화 인터벌 토글
+	// TODO: 화면 다시 렌더링할 경우 toggle이 두번 호출되어 멈추질 않는다.
+	// 리 렌더링할 경우 왜 두번 호출되는지 파악해야 한다.
 	toggleInterval = (func)=> {
 		const key = Object.keys(func)[0];
 		const timerId = Util.timerObj[key];
@@ -99,6 +112,7 @@ export default class ProjectItem extends Component{
         }
 	}
 
+	// 게시글 동기화
     syncBoard = {
 		syncBoard : ()=> {
 			axios({
@@ -107,10 +121,10 @@ export default class ProjectItem extends Component{
 				withCredentials: true,
 				data: {
 					syncTime: this.state.syncTime  // 최종 동기화 시간을 전달하여 그 후의 데이터만 읽어오도록 한다.
-				},
+				}
 			})
-			.then((response) => {
-				const result = response.data;
+			.then((res) => {
+				const result = res.data;
 
 				if (!result.isExec) {
 					return alert(result.msg);
@@ -125,9 +139,9 @@ export default class ProjectItem extends Component{
 
 				// 추가된 게시글이 있으면 추가
 				if (result.boardList) {
-					//const boardList = this.state.boardList.concat(result.boardList);	// 이전 게시글 + 추가된 게시글
+					const boardList = this.state.boardList.concat(result.boardList);	// 이전 게시글 + 추가된 게시글
 
-					const boardList = result.boardList;	// 추가된 게시글
+					//const boardList = result.boardList;	// 추가된 게시글
 
 					// 게시글 추가 및 동기화 시간 갱신
 					this.setState({
@@ -148,8 +162,49 @@ export default class ProjectItem extends Component{
 		}
 	}
 	
+	// 게시글 추가
 	addPost = ()=> {
-		;
+		let contents = document.getElementById('board_contents');
+
+		if (contents === null || contents.value==='') {
+			return alert('게시글 내용을 입력 후 추가해주세요.');
+		}
+
+		axios({
+			method:'post',
+			url: this.props.apiURL + '/board/' + this.state.pjtName + '/' + this.state.grpName + '/addPost',
+			withCredentials: true,
+			data: {
+				contents: contents.value
+			}
+		})
+		.then(res => {
+			const result = res.data;
+
+			// 디버그 표시
+			document.getElementById('msgDiv').innerHTML = result.msg;
+
+			if (!result.isExec) {
+				return alert(result.msg);
+			}
+
+			contents.value = '';	// 입력한 컨텐츠 내용 비우기
+		})
+		.catch(error=> {
+			return console.error(error);
+		});
+	}
+
+	// 게시글 내용 textArea keyPress이벤트 등록
+	onKeyPress_contents = e=> {
+		// 엔터키 입력 시
+		if (e.which===13) {
+			// 컨트롤 or Shift or alt 를 같이 누르지 않은 경우
+			if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
+				e.preventDefault();
+				this.addPost(); // 게시글 추가
+			}
+		}
 	}
 
     render() {
@@ -157,20 +212,18 @@ export default class ProjectItem extends Component{
 		const {boardList} = this.state;
 		const li_boardList = boardList.map(
 			(board, i) => (
-				<div class="defaultDiv" style={{width: "100%"}}>
+				<div key={i} className="defaultDiv" style={{width: "100%"}}>
 					<ul>
 						<li>ID: {board.userId}</li>
 						<li>작성일: {board.reg_dt}</li>
-						<li>내용 <textarea name="contents" rows="3" readOnly style={{resize: 'none', width: '90%'}}>{board.contents}</textarea></li>
+						<li>내용 <textarea name="contents" rows="3" readOnly style={{resize: 'none', width: '90%'}} value={board.contents}/></li>
 					</ul>
 				</div>
 			)
 		);
 
-		let boardElem = document.getElementById('boardDiv');
-		if (boardElem !== null) {
-			boardElem.innerHTML += li_boardList;
-		}
+		// TODO: 스크롤 위치가 이전 위치를 반영하는 것을 보아 추가된 게시글 div 만 리렌더링 때 추가되는듯 하다.
+		//		 전체가 다시 그려지지 않는 이유를 확인해야 한다.
 		
         return (
 			<div>
@@ -191,10 +244,12 @@ export default class ProjectItem extends Component{
 					<input type="button" id="syncBoard" value="동기화 중지" onClick={()=> {Util.stopInterval(this.syncBoard);}}/>
 					동기화 시간 : {this.state.syncTime}
 					<div className="defaultDiv">
-						<div className="scrollDiv" id="boardDiv" style={{overflowX: "hidden"}}></div>
+						<div className="scrollDiv" id="boardDiv" style={{overflowX: "hidden"}}>
+							{li_boardList}
+						</div>
 						<div className="defaultDiv" style={{width: '100%'}}>
 							<ul>
-								<li>내용 <textarea id="board_contents" rows="3" style={{resize: 'none', width: '90%'}}></textarea></li>
+								<li>내용 <textarea id="board_contents" rows="3" style={{resize: 'none', width: '90%'}} onKeyPress={this.onKeyPress_contents}/></li>
 								<input type="button" id="btn_addPost" value="올리기" onClick={this.addPost}/>
 							</ul>
 						</div>

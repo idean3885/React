@@ -29,15 +29,17 @@ export default class SignInItem extends Component{
 		})
 		.then((response)=> {
             const result = response.data;
+            document.getElementById('msgDiv').innerHTML = result.msg;
             
-			if (!result.isExec) {
-                user_pwd.value = '';    // 입력한 비밀번호 지우기
-
-                return alert(result.msg);
-            }
-	
-			// 회원가입 성공한 경우 로그인 화면으로 이동
             alert(result.msg);
+			if (!result.isExec) {
+                return;
+            }
+    
+            // 입력한 비밀번호 지우기
+            user_pwd.value = '';
+
+			// 회원가입 성공한 경우 로그인 화면 보여주기
             this.viewSignIn();
 		})
 		.catch((error)=> {

@@ -28,7 +28,7 @@ export default class ProjectItem extends Component{
     }
 
     inviteUser = ()=> {
-        const elem_memberId = document.getElementById('input_pjtMemberId');
+        let elem_memberId = document.getElementById('input_pjtMemberId');
         const memberId = elem_memberId!==undefined? elem_memberId.value : '';
 
         const {pjtName} = this.state;
@@ -41,7 +41,7 @@ export default class ProjectItem extends Component{
             return alert('프로젝트가 선택되지 않았습니다.');
         }
         
-        const url = this.props.apiURL + '/baord/' + pjtName + '/addPjtMember';
+        const url = this.props.apiURL + '/board/' + pjtName + '/addPjtMember';
         axios({
 			method: 'post',
 			url: url,
@@ -50,25 +50,26 @@ export default class ProjectItem extends Component{
                 memberId: memberId
             }
 		})
-		.then((response)=> {
-            const result = response.data;
+		.then((res)=> {
+            const result = res.data;
             document.getElementById('msgDiv').innerHTML = result.msg;
 
+            alert(result.msg);
             if (!result.isExec) {
-                return alert(result.msg);
+                return;
 			}
 	
             // 추가된 참여자 세팅
             let pjtMember = this.state.pjtMember;
             pjtMember += ", " + memberId;
 
-            // this.setState({
-            //     pjtMember: ''
-            // });
-
+            // reRendering 을 위한 setState
             this.setState({
                 pjtMember: pjtMember
             });
+
+            // 입력한 사용자명 지우기
+            elem_memberId.value = '';
 		})
 		.catch((error)=> {
             const status = error.response.status;
@@ -84,8 +85,46 @@ export default class ProjectItem extends Component{
         });
     }
 
+    // 그룹 추가
     addGroup = ()=> {
-        ;
+        let elem_grpName = document.getElementById('input_grpName');
+        let grpName = elem_grpName !==undefined? elem_grpName.value : null;
+
+        if (grpName==null || grpName==='') {
+            return alert('그룹 이름을 입력 후 시도해주세요.');
+        }
+
+        axios({
+            method: 'post',
+            url: this.props.apiURL + '/board/' + grpName + '/addGroup',
+            withCredentials:true,
+            data: {
+                grpName: grpName
+            }
+        })
+        .then(res=> {
+            const result = res.data;
+
+            document.getElementById('msgDiv').innerHTML = result.msg;
+
+            alert(result.msg);
+            if (!result.isExec) {
+                return;
+            }
+
+            if (result.grpInfo) {
+                let {grpList} = this.state;
+                grpList.push(result.grpInfo);
+                this.setState({
+                    grpList: grpList
+                });
+
+                elem_grpName.value = '';
+            }
+        })
+        .catch(error=> {
+            return console.error(error);
+        });
     }
 
     // 그룹 조회
@@ -97,17 +136,12 @@ export default class ProjectItem extends Component{
             url: url,
             withCredentials: true,
         })
-        .then((response)=>{
-            const result = response.data;
-            
-            // TODO: 게시글 조회 인터벌 중지 및 시작
-            // Util.stopInterval(syncBoard);
+        .then((res)=>{
+            const result = res.data;
+            document.getElementById('msgDiv').innerHTML = result.msg;            
 
             // 그룹 정보가 조회되지 않은 경우
             if (!result.isExec) {
-                console.error(result.msg);
-                // Util.stopInterval(syncBoard);
-
                 return alert(result.msg);
             }
 
@@ -126,9 +160,7 @@ export default class ProjectItem extends Component{
                 });
             }
         })
-        .catch((error)=> {
-            // Util.stopInterval(syncBoard);
-            
+        .catch((error)=> {            
             const status = error.response.status;
             const msg = error.response.data.msg;
 

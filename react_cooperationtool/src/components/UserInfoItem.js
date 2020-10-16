@@ -16,8 +16,18 @@ export default class UserInfoItem extends Component {
 		pjtList: []
 	}
 
-	viewSignIn = e=> {
-		//e.preventDefault();
+	viewSignIn = ()=> {
+		// 사용자 정보 화면 갱신 후 로그인 화면 진입
+		this.setState({
+			signInStyle: "block",
+			signUpStyle: "block",
+			signOutStyle: "none",
+			userInfoStyle: "none",
+			userId: "",
+			userName: "",
+			pjtList: []
+		});
+
 		this.props.viewSignIn();
 	}
 
@@ -32,8 +42,12 @@ export default class UserInfoItem extends Component {
 			url: this.props.apiURL + '/auth/signout',
             withCredentials: true
 		})
-		.then((response)=> {
-			const result = response.data;
+		.then((res)=> {
+			const result = res.data;
+
+			// 디버그 표시
+			document.getElementById('msgDiv').innerHTML = result.msg;
+
 			if (!result.isExec) {
                 return alert(result.msg);
 			}
@@ -61,8 +75,11 @@ export default class UserInfoItem extends Component {
 			url: this.props.apiURL + '/board/' + pjtName,
 			withCredentials: true
 		})
-		.then((response)=> {
-			const result = response.data;
+		.then((res)=> {
+			const result = res.data;
+
+			// 디버그 표시
+			document.getElementById('msgDiv').innerHTML = result.msg;
 			
 			return this.props.viewProject(result.pjtInfo);
 		})
@@ -82,11 +99,10 @@ export default class UserInfoItem extends Component {
 	
 	createProject = ()=> {
 		let elem_pjtName = document.getElementById('input_pjtName');
-
         const pjtName = elem_pjtName !== undefined? elem_pjtName.value : null;
 
 		// 값이 입력되었는지 확인
-        if (pjtName==null) {
+        if (pjtName==null || pjtName==='') {
             return alert('프로젝트 이름을 입력해주세요.');
         }
 
@@ -98,7 +114,12 @@ export default class UserInfoItem extends Component {
                 pjtName: pjtName
             }
 		})
-		.then((result)=> {
+		.then((res)=> {
+			const result = res.data;
+
+			// 디버그 표시
+			document.getElementById('msgDiv').innerHTML = result.msg;
+
 			if (!result.isExec) {
                 return alert(result.msg);
 			}
@@ -111,6 +132,9 @@ export default class UserInfoItem extends Component {
 			this.setState({
 				pjtList: pjtList
 			});
+
+			// 입력한 프로젝트 명 지우기
+			elem_pjtName.value = '';
 		})
 		.catch((error)=> {
 			return console.error(error);
@@ -126,26 +150,17 @@ export default class UserInfoItem extends Component {
 				url: this.props.apiURL + '/auth/getLoginUser',
 				withCredentials: true
 			})
-			.then((response)=> {
-				const result = response.data;
-				document.getElementById('msgDiv').innerHTML = result.msg;
+			.then((res)=> {
+				const result = res.data;
 				
 				// 사용자 정보가 조회되지 않는 경우 
 				if (!result.isExec) {
+					// 인터벌이기 때문에 문제가 발생한 경우에만 디버그를 보여주도록 한다.
+					document.getElementById('msgDiv').innerHTML = result.msg;
+
 					// 알림
 					console.log(result.msg);
 					Util.stopInterval(this.getLoginUserinfo);
-
-					// 사용자 정보 화면 갱신 후 로그인 화면 진입
-					this.setState({
-						signInStyle: "block",
-						signUpStyle: "block",
-						signOutStyle: "none",
-						userInfoStyle: "none",
-						userId: "",
-						userName: "",
-						pjtList: []
-					});
 					
 					return this.viewSignIn();
 				}
