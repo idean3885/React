@@ -27,6 +27,7 @@ export default class ProjectItem extends Component{
         }       
     }
 
+    // 프로젝트 참여자 초대
     inviteUser = ()=> {
         let elem_memberId = document.getElementById('input_pjtMemberId');
         const memberId = elem_memberId!==undefined? elem_memberId.value : '';
@@ -96,7 +97,7 @@ export default class ProjectItem extends Component{
 
         axios({
             method: 'post',
-            url: this.props.apiURL + '/board/' + grpName + '/addGroup',
+            url: this.props.apiURL + '/board/' + this.state.pjtName + '/addGroup',
             withCredentials:true,
             data: {
                 grpName: grpName
