@@ -3,8 +3,7 @@ import axios from 'axios';
 import './commonCSS.css';
 
 export default class SignInItem extends Component{
-    viewSignIn = e=> {
-        e.preventDefault();
+    viewSignIn = ()=> {
         this.props.viewSignIn();
     }
 

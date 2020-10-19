@@ -31,8 +31,7 @@ export default class UserInfoItem extends Component {
 		this.props.viewSignIn();
 	}
 
-	viewSignUp = e=> {
-		e.preventDefault();
+	viewSignUp = ()=> {
 		this.props.viewSignUp();
 	}
 	
