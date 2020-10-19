@@ -195,16 +195,18 @@ export default class ProjectItem extends Component{
 		});
 	}
 
-	// 게시글 내용 textArea keyPress이벤트 등록
-	onKeyPress_contents = e=> {
-		// 엔터키 입력 시
-		if (e.which===13) {
-			// 컨트롤 or Shift or alt 를 같이 누르지 않은 경우
-			if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
-				e.preventDefault();
-				this.addPost(); // 게시글 추가
+	componentDidMount() {
+		// 게시글 내용 이벤트 등록
+		document.getElementById('board_contents').addEventListener('keydown', (e)=> {
+			// 엔터키 입력 시
+			if (e.which===13) {
+				// 컨트롤 or Shift or alt 를 같이 누르지 않은 경우
+				if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
+					e.preventDefault();
+					this.addPost(); // 게시글 추가
+				}
 			}
-		}
+		});
 	}
 
     render() {
@@ -224,7 +226,6 @@ export default class ProjectItem extends Component{
 
 		// TODO: 스크롤 위치가 이전 위치를 반영하는 것을 보아 추가된 게시글 div 만 리렌더링 때 추가되는듯 하다.
 		//		 전체가 다시 그려지지 않는 이유를 확인해야 한다.
-		
         return (
 			<div>
 				<div id="div_grpInfo">
@@ -249,7 +250,7 @@ export default class ProjectItem extends Component{
 						</div>
 						<div className="defaultDiv" style={{width: '100%'}}>
 							<ul>
-								<li>내용 <textarea id="board_contents" rows="3" style={{resize: 'none', width: '90%'}} onKeyPress={this.onKeyPress_contents}/></li>
+								<li>내용 <textarea id="board_contents" rows="3" style={{resize: 'none', width: '90%'}}/></li>
 								<input type="button" id="btn_addPost" value="올리기" onClick={this.addPost}/>
 							</ul>
 						</div>

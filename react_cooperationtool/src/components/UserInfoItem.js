@@ -19,10 +19,6 @@ export default class UserInfoItem extends Component {
 	viewSignIn = ()=> {
 		// 사용자 정보 화면 갱신 후 로그인 화면 진입
 		this.setState({
-			signInStyle: "block",
-			signUpStyle: "block",
-			signOutStyle: "none",
-			userInfoStyle: "none",
 			userId: "",
 			userName: "",
 			pjtList: []
@@ -136,6 +132,10 @@ export default class UserInfoItem extends Component {
 			elem_pjtName.value = '';
 		})
 		.catch((error)=> {
+			// const status = error.response.status;
+			const msg = error.response.data.msg;
+			
+			alert(msg);
 			return console.error(error);
         });
 	}
@@ -152,7 +152,7 @@ export default class UserInfoItem extends Component {
 			.then((res)=> {
 				const result = res.data;
 				
-				// 사용자 정보가 조회되지 않는 경우 
+				// 정보가 조회됬음에도 오류가 발생한 경우 
 				if (!result.isExec) {
 					// 인터벌이기 때문에 문제가 발생한 경우에만 디버그를 보여주도록 한다.
 					document.getElementById('msgDiv').innerHTML = result.msg;
@@ -182,16 +182,34 @@ export default class UserInfoItem extends Component {
 			})
 			.catch((error)=> {
 				Util.stopInterval(this.getLoginUserinfo);
-				return console.error(error);
+
+				//const status = error.response.status;
+				const msg = error.response.data !==null? error.response.data.msg : 'Server_Error! Not Receive Msg From Server.';
+
+				alert(msg);
+
+				// 서버에서 정상적으로 처리되지 않은 경우만 콘솔 에러 출력
+				if (msg.startsWith('Server_Error')) {
+					console.error(error);
+				}
+				
+				return this.viewSignIn();
 			});
 		}
 	}
 
-	render(){
+	// 컴포넌트 생성 -> render 이후 실행됨.
+	// 렌더링 안에서 인터벌을 실행할 경우 
+	// 사용자 정보 조회 -> 조회된 정보로 rerendering -> 다시 인터벌 시작
+	// 위 과정으로 인해 무한루프가 발생한다.
+	// 이를 막기 위해 렌더링 안에서 re rendering이 발생할 수 있는 setState 는 하지 않는다.
+	componentDidMount() {
 		if (this.props.isStart){
 			Util.startInterval(60, this.getLoginUserinfo);
-		}		
+		}
+	}
 
+	render(){
 		// state 중 pjtList만 가져옴
 		const {pjtList} = this.state;
 		const li_pjtList = pjtList.map(

@@ -47,22 +47,36 @@ export default class SignInItem extends Component{
                 return alert(result.msg);
 			}
 	
-            // 로그인 성공한 경우 header 화면 보여주기
-            this.viewUserInfo();
+            // 로그인 성공한 경우 메인화면으로 리다이렉트
+            // 화면만 리 렌더링할 경우 componentDidMount() 가 실행되지 않아 사용자 정보 조회 인터벌이 실행되지 않는다.
+            // 따라서 메인화면으로 다시 진입하여 인터벌이 정상적으로 실행되도록 한다.
+            document.location.href = '/';
 		})
 		.catch((error)=> {
-			elem_userPwd.value = '';    // 입력한 비밀번호 지우기
-			return console.error(error);
+            elem_userPwd.value = '';    // 입력한 비밀번호 지우기
+
+            //const status = error.response.status;
+            const msg = error.response.data!==null? error.response.data.msg : 'Server_Error! Not Receive Msg From Server.';
+            alert(msg);
+
+            // 서버 에러인 경우만 콘솔 에러 출력
+            if (msg.startsWith('Server_Error')) {
+                console.error(error);
+            }
+			
+			return;
         });
     }
 
-    // 비밀번호 입력 keyPress 이벤트 등록
-    onKeyPress_pwd = e=> {
-        // 엔터키 입력 시
-		if (e.which===13) {
-			e.preventDefault();
-			this.signIn(); // 로그인 진행
-		}
+    componentDidMount() {
+        // 비밀번호 입력창 이벤트 등록
+        document.getElementById('user_pwd').addEventListener('keydown', (e)=> {
+            // 엔터키 입력 시
+            if (e.which===13) {
+                e.preventDefault();
+                this.signIn(); // 로그인 진행
+            }
+        });
     }
 
     render() {
@@ -71,7 +85,7 @@ export default class SignInItem extends Component{
                 <h3> [로그인 화면] </h3>
                 <div className="defaultDiv">
                     <div><input type="text" id="user_id" placeholder="ID 입력"/></div>
-                    <div><input type="password" id="user_pwd" placeholder="PWD 입력" onKeyPress={this.onKeyPress_pwd}/></div>
+                    <div><input type="password" id="user_pwd" placeholder="PWD 입력"/></div>
                     <input type="button" value="로그인" onClick={this.signIn}/>
                 </div>
              </div>
