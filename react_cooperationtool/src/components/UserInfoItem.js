@@ -19,6 +19,7 @@ export default class UserInfoItem extends Component {
 	viewSignIn = ()=> {
 		// 사용자 정보 화면 갱신 후 로그인 화면 진입
 		this.setState({
+			userInfoStyle: "none",
 			userId: "",
 			userName: "",
 			pjtList: []
@@ -115,21 +116,20 @@ export default class UserInfoItem extends Component {
 			// 디버그 표시
 			document.getElementById('msgDiv').innerHTML = result.msg;
 
-			if (!result.isExec) {
-                return alert(result.msg);
+			alert(result.msg);
+			if (result.isExec) {
+				// 프로젝트 생성한 경우 -> list 추가 필요.
+				let pjtList = this.state.pjtList;
+				pjtList.push(pjtName);
+
+				// 화면 갱신 -> setState 할 경우 re rendering 됨.
+				this.setState({
+					pjtList: pjtList
+				});
+
+				// 입력한 프로젝트 명 지우기
+				elem_pjtName.value = '';
 			}
-	
-			// 프로젝트 생성한 경우 -> list 추가 필요.
-			let pjtList = this.state.pjtList;
-			pjtList.push(pjtName);
-
-			// 화면 갱신 -> setState 할 경우 re rendering 됨.
-			this.setState({
-				pjtList: pjtList
-			});
-
-			// 입력한 프로젝트 명 지우기
-			elem_pjtName.value = '';
 		})
 		.catch((error)=> {
 			// const status = error.response.status;
