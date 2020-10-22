@@ -56,9 +56,6 @@ export default class ProjectItem extends Component{
             document.getElementById('msgDiv').innerHTML = result.msg;
 
             alert(result.msg);
-            if (!result.isExec) {
-                return;
-			}
 	
             // 추가된 참여자 세팅
             let pjtMember = this.state.pjtMember;
@@ -109,9 +106,6 @@ export default class ProjectItem extends Component{
             document.getElementById('msgDiv').innerHTML = result.msg;
 
             alert(result.msg);
-            if (!result.isExec) {
-                return;
-            }
 
             if (result.grpInfo) {
                 let {grpList} = this.state;
@@ -139,12 +133,7 @@ export default class ProjectItem extends Component{
         })
         .then((res)=>{
             const result = res.data;
-            document.getElementById('msgDiv').innerHTML = result.msg;            
-
-            // 그룹 정보가 조회되지 않은 경우
-            if (!result.isExec) {
-                return alert(result.msg);
-            }
+            document.getElementById('msgDiv').innerHTML = result.msg;
 
             if (result.grpInfo) {
                 const grpInfo = result.grpInfo;

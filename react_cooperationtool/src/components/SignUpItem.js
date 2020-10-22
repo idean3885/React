@@ -31,12 +31,6 @@ export default class SignInItem extends Component{
             document.getElementById('msgDiv').innerHTML = result.msg;
             
             alert(result.msg);
-			if (!result.isExec) {
-                return;
-            }
-    
-            // 입력한 비밀번호 지우기
-            user_pwd.value = '';
 
 			// 회원가입 성공한 경우 로그인 화면 보여주기
             this.viewSignIn();

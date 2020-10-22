@@ -40,15 +40,8 @@ export default class UserInfoItem extends Component {
 		})
 		.then((res)=> {
 			const result = res.data;
-
-			// 디버그 표시
-			document.getElementById('msgDiv').innerHTML = result.msg;
-
-			if (!result.isExec) {
-                return alert(result.msg);
-			}
 	
-			alert('로그아웃 하였습니다. 메인 화면으로 이동합니다.')
+			alert(result.msg);
 			document.location.href = '/';
 		})
 		.catch((error)=> {
@@ -117,19 +110,17 @@ export default class UserInfoItem extends Component {
 			document.getElementById('msgDiv').innerHTML = result.msg;
 
 			alert(result.msg);
-			if (result.isExec) {
-				// 프로젝트 생성한 경우 -> list 추가 필요.
-				let pjtList = this.state.pjtList;
-				pjtList.push(pjtName);
+			// 프로젝트 생성한 경우 -> list 추가 필요.
+			let pjtList = this.state.pjtList;
+			pjtList.push(pjtName);
 
-				// 화면 갱신 -> setState 할 경우 re rendering 됨.
-				this.setState({
-					pjtList: pjtList
-				});
+			// 화면 갱신 -> setState 할 경우 re rendering 됨.
+			this.setState({
+				pjtList: pjtList
+			});
 
-				// 입력한 프로젝트 명 지우기
-				elem_pjtName.value = '';
-			}
+			// 입력한 프로젝트 명 지우기
+			elem_pjtName.value = '';
 		})
 		.catch((error)=> {
 			// const status = error.response.status;
@@ -151,42 +142,30 @@ export default class UserInfoItem extends Component {
 			})
 			.then((res)=> {
 				const result = res.data;
-				
-				// 정보가 조회됬음에도 오류가 발생한 경우 
-				if (!result.isExec) {
-					// 인터벌이기 때문에 문제가 발생한 경우에만 디버그를 보여주도록 한다.
-					document.getElementById('msgDiv').innerHTML = result.msg;
-
-					// 알림
-					console.log(result.msg);
-					Util.stopInterval(this.getLoginUserinfo);
-					
-					return this.viewSignIn();
-				}
 		
 				// 사용자 정보가 조회된 경우(로그인한 경우)
-				if (result.userInfo) {
-					const loginUser = result.userInfo;
+				const loginUser = result.userInfo;
 		
-					// 화면 갱신 -> setState 할 경우 re rendering 됨.
-					this.setState({
-						signInStyle: "none",
-						signUpStyle: 'none',
-						signOutStyle: "block",
-						userInfoStyle: "block",
-						userId: loginUser.userId,
-						userName: loginUser.userName,
-						pjtList: loginUser.joinProjects
-					});
-				}
+				// 화면 갱신 -> setState 할 경우 re rendering 됨.
+				this.setState({
+					signInStyle: "none",
+					signUpStyle: 'none',
+					signOutStyle: "block",
+					userInfoStyle: "block",
+					userId: loginUser.userId,
+					userName: loginUser.userName,
+					pjtList: loginUser.joinProjects
+				});
 			})
 			.catch((error)=> {
 				Util.stopInterval(this.getLoginUserinfo);
 
 				//const status = error.response.status;
 				const msg = error.response.data !==null? error.response.data.msg : 'Server_Error! Not Receive Msg From Server.';
-
 				alert(msg);
+
+				// 디버그 표시
+				document.getElementById('msgDiv').innerHTML = msg;
 
 				// 서버에서 정상적으로 처리되지 않은 경우만 콘솔 에러 출력
 				if (msg.startsWith('Server_Error')) {

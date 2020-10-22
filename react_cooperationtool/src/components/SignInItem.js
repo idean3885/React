@@ -37,16 +37,7 @@ export default class SignInItem extends Component{
                 user_pwd: user_pwd
             }
 		})
-		.then((res)=> {
-            const result = res.data;
-            document.getElementById('msgDiv').innerHTML = result.msg;
-
-            if (!result.isExec) {
-				elem_userPwd.value = '';    // 입력한 비밀번호 지우기
-
-                return alert(result.msg);
-			}
-	
+		.then((res)=> {	
             // 로그인 성공한 경우 메인화면으로 리다이렉트
             // 화면만 리 렌더링할 경우 componentDidMount() 가 실행되지 않아 사용자 정보 조회 인터벌이 실행되지 않는다.
             // 따라서 메인화면으로 다시 진입하여 인터벌이 정상적으로 실행되도록 한다.

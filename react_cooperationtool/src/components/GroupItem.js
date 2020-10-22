@@ -58,9 +58,6 @@ export default class ProjectItem extends Component{
             document.getElementById('msgDiv').innerHTML = result.msg;
 
 			alert(result.msg);
-            if (!result.isExec) {
-                return;
-			}
 	
             // 추가된 참여자 세팅
             let grpMember = this.state.grpMember;
@@ -126,10 +123,6 @@ export default class ProjectItem extends Component{
 			.then((res) => {
 				const result = res.data;
 
-				if (!result.isExec) {
-					return alert(result.msg);
-				}
-
 				let isBottom = false;
 				const scrollTop = document.getElementById('boardDiv').scrollTop;	// 현재 위치
 				const scrollHeight = document.getElementById('boardDiv').scrollHeight;	// 스크롤 높이
@@ -183,11 +176,6 @@ export default class ProjectItem extends Component{
 
 			// 디버그 표시
 			document.getElementById('msgDiv').innerHTML = result.msg;
-
-			if (!result.isExec) {
-				return alert(result.msg);
-			}
-
 			contents.value = '';	// 입력한 컨텐츠 내용 비우기
 		})
 		.catch(error=> {
