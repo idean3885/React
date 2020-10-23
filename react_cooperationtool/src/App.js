@@ -1,4 +1,7 @@
 import React, { Component} from 'react';
+import ErrorBoundary from './components/ErrorBoundary';
+
+/* 컴포넌트 */
 import UserInfoItem from './components/UserInfoItem';
 import SignInItem from './components/SignInItem';
 import SignUpItem from './components/SignUpItem';
@@ -68,25 +71,41 @@ class App extends Component {
 	}
 
 	render() {
+		const {apiUrl} = this.props;	// API서버 주소
 		return (
 			<div>
-				<UserInfoItem apiURL={this.props.apiURL} viewSignIn={this.viewSignIn} viewSignUp={this.viewSignUp} viewProject={this.viewProject} isStart={this.state.isStartUserInfo}/>
-				{this.state.isViewSignIn &&
-					<SignInItem apiURL={this.props.apiURL} viewUserInfo={this.viewUserInfo}/>
-				}
-				{this.state.isViewSignUp &&
-					<SignUpItem apiURL={this.props.apiURL}/>
-				}
-				{this.state.isViewProject &&
-					<ProjectItem apiURL={this.props.apiURL} pjtInfo={this.state.pjtInfo}/>
-				}
+				{/* 사용자 정보 */}
+				<ErrorBoundary>
+					<UserInfoItem apiUrl={apiUrl} viewSignIn={this.viewSignIn} viewSignUp={this.viewSignUp} viewProject={this.viewProject} isStart={this.state.isStartUserInfo}/>
+				</ErrorBoundary>
+
+				{/* 로그인 */}
+				<ErrorBoundary>
+					{this.state.isViewSignIn &&
+						<SignInItem apiUrl={apiUrl} viewUserInfo={this.viewUserInfo}/>
+					}
+				</ErrorBoundary>
+					
+				{/* 회원가입 */}
+				<ErrorBoundary>
+					{this.state.isViewSignUp &&
+						<SignUpItem apiUrl={apiUrl}/>
+					}
+				</ErrorBoundary>
+				
+				{/* 프로젝트 조회 */}
+				<ErrorBoundary>
+					{this.state.isViewProject &&
+						<ProjectItem apiUrl={apiUrl} pjtInfo={this.state.pjtInfo}/>
+					}
+				</ErrorBoundary>
 			</div>
 		)
 	}
 }
 
 App.defaultProps = {
-	apiURL: 'http://localhost:3050'
+	apiUrl: 'http://localhost:3050'
 };
 
 export default App;

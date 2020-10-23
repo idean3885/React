@@ -1,5 +1,5 @@
 export default class Util {
-	timerObj = Object.create(null);
+	static timerObj = Object.create(null);
 
 	/**
 	 * 인터벌 시작 함수
@@ -11,12 +11,6 @@ export default class Util {
 	 * @param obj [함수 객체 = {함수이름 : 인터벌 함수}]
 	 * */
 	static startInterval = (sec, obj)=> {
-
-        // static 메소드라 생성자가 동작하기 전에 함수가 만들어져 값이 꼬이는 듯..
-        if (this.timerObj===undefined) {
-            this.timerObj = Object.create(null);   // 타이머ID Object, 타이머를 키값으로 모든 인터벌을 한번에 관리한다.
-        }
-
 		const key = Object.keys(obj)[0];
 		const cb = obj[key];	// 함수 이름을 키로 설정    
 
@@ -40,12 +34,6 @@ export default class Util {
      * @param obj [함수 객체 = {함수이름 : 인터벌 함수}]
      * */
     static stopInterval = (obj)=> {
-
-        // static 메소드라 생성자가 동작하기 전에 함수가 만들어져 값이 꼬이는 듯..
-        if (this.timerObj===undefined) {
-            this.timerObj = Object.create(null);   // 타이머ID Object, 타이머를 키값으로 모든 인터벌을 한번에 관리한다.
-        }
-
 		const key = Object.keys(obj)[0];
 
 		const timerId = this.timerObj[key];

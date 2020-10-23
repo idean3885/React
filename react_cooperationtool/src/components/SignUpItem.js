@@ -1,57 +1,77 @@
-import React, { Component} from 'react';
-import axios from 'axios';
-import './commonCSS.css';
+import React, { Component } from "react";
+import axios from "axios";
+import "./commonCSS.css";
 
-export default class SignInItem extends Component{
-    viewSignIn = ()=> {
-        this.props.viewSignIn();
+export default class SignInItem extends Component {
+  viewSignIn = () => {
+    this.props.viewSignIn();
+  };
+
+  signUp = () => {
+    let user_id = document.getElementById("user_id");
+    let user_pwd = document.getElementById("user_pwd");
+    let user_name = document.getElementById("user_name");
+
+    if (user_id == null || user_pwd == null || user_name == null) {
+      return alert("값을 모두 입력 후 시도해 주세요.");
     }
 
-    signUp = ()=> {
-        let user_id = document.getElementById('user_id');
-        let user_pwd = document.getElementById('user_pwd');
-        let user_name = document.getElementById('user_name');
+    const { apiUrl } = this.props;
+    axios({
+      method: "post",
+      url: apiUrl + "/auth/signup",
+      withCredentials: true,
+      data: {
+        user_id: user_id.value,
+        user_pwd: user_pwd.value,
+        user_name: user_name.value,
+      },
+    })
+      .then((res) => {
+        const result = res.data;
+				alert(result.msg);
+        document.getElementById("msgDiv").innerHTML = result.msg;
 
-        if (user_id == null || user_pwd==null || user_name==null) {
-            return alert('값을 모두 입력 후 시도해 주세요.');
-        }
+        // 회원가입 성공한 경우 로그인 화면 보여주기
+        this.viewSignIn();
+      })
+      .catch((error) => {
+        user_pwd.value = ""; // 입력한 비밀번호 지우기
 
-        axios({
-			method: 'post',
-			url: this.props.apiURL + '/auth/signup',
-            withCredentials: true,
-            data: {
-                user_id: user_id.value, 
-                user_pwd: user_pwd.value, 
-                user_name: user_name.value
-            }
-		})
-		.then((response)=> {
-            const result = response.data;
-            document.getElementById('msgDiv').innerHTML = result.msg;
-            
-            alert(result.msg);
+        const res = error.response;
 
-			// 회원가입 성공한 경우 로그인 화면 보여주기
-            this.viewSignIn();
-		})
-		.catch((error)=> {
-			user_pwd.value = '';    // 입력한 비밀번호 지우기
-			return console.error(error);
-        });
-    }
+         // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+        const msg = res?.data?.msg!==undefined? res.data.msg : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다. API서버 상태 및 기능 확인하시기 바랍니다.";
+        alert(msg);
+        document.getElementById("msgDiv").innerHTML = msg;
+        
+        return console.error(error);
+      });
+  };
 
-    render() {
-        return (
-            <div id="div_signUp">
-               <h3>[회원가입 화면]</h3>
-                <div className="defaultDiv">
-                    <div>아이디     : <input type="text" id="user_id" placeholder="ID 입력" /></div>
-                    <div>비밀번호   : <input type="password" id="user_pwd" placeholder="PWD 입력"/></div>
-                    <div>이름       : <input type="text" id="user_name" placeholder="이름을 입력해주세요"/></div>
-                    <input type="button" value="가입하기" onClick={this.signUp}/>
-                </div>
-             </div>
-        )
-    }
+  render() {
+    return (
+      <div id="div_signUp">
+        <h3>[회원가입 화면]</h3>
+        <div className="defaultDiv">
+          <div>
+            아이디 : <input type="text" id="user_id" placeholder="ID 입력" />
+          </div>
+          <div>
+            비밀번호 :{" "}
+            <input type="password" id="user_pwd" placeholder="PWD 입력" />
+          </div>
+          <div>
+            이름 :{" "}
+            <input
+              type="text"
+              id="user_name"
+              placeholder="이름을 입력해주세요"
+            />
+          </div>
+          <input type="button" value="가입하기" onClick={this.signUp} />
+        </div>
+      </div>
+    );
+  }
 }
