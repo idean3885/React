@@ -89,7 +89,7 @@ class App extends Component {
 				{/* 회원가입 */}
 				<ErrorBoundary>
 					{this.state.isViewSignUp &&
-						<SignUpItem apiUrl={apiUrl}/>
+						<SignUpItem apiUrl={apiUrl} viewSignIn={this.viewSignIn}/>
 					}
 				</ErrorBoundary>
 				

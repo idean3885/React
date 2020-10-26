@@ -1,22 +1,10 @@
-import React, { Component } from "react";
+import React, { useCallback, useEffect } from "react";
 import axios from "axios";
 import "./commonCSS.css";
 
-export default class SignInItem extends Component {
-  constructor() {
-    super();
-
-    // 메소드 내 this 를 클래스의 this로 연결한다.
-    // 메소드를 함수 리터럴로 만들경우, this 는 함수에서 가장 가까운 변수인 리터럴변수로 바인딩된다.
-    // 따라서 다른 메소드들은 함수 리터럴로 만들기로 한다.
-    this.signIn = this.signIn.bind(this);
-  }
-
-  viewUserInfo = () => {
-    this.props.viewUserInfo();
-  };
-
-  signIn = () => {
+function SignInForm(props) {
+  // 로그인 기능
+  const signIn = useCallback(() => {
     let elem_userId = document.getElementById("user_id");
     let elem_userPwd = document.getElementById("user_pwd");
 
@@ -28,7 +16,7 @@ export default class SignInItem extends Component {
       return alert("아이디와 비밀번호를 모두 입력 후 로그인해주십시오.");
     }
 
-    const { apiUrl } = this.props;
+    const { apiUrl } = props;
     axios({
       method: "post",
       url: apiUrl + "/auth/signin",
@@ -51,45 +39,53 @@ export default class SignInItem extends Component {
       .catch((error) => {
         elem_userPwd.value = ""; // 입력한 비밀번호 지우기
 
-        const res = error.response;
+        let msg = "";
+        // then 과정에서 발생한 로직 에러 처리
+        if (error.name !== undefined) {
+          msg = error.name + " : " + error.message;
+        } else {
+          const res = error?.response;
 
-        // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
-        const msg =
-          res?.data?.msg !== undefined
-            ? res.data.msg
-            : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다. API서버 상태 및 기능 확인하시기 바랍니다.";
+          // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+          msg =
+            res?.data?.msg !== undefined
+              ? res.data.msg
+              : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
+        }
         alert(msg);
         document.getElementById("msgDiv").innerHTML = msg;
 
         return console.error(error);
       });
-  };
+  }, [props]);
 
-  componentDidMount() {
+  // 렌더가 완료된 후 호출되는 콜백함수
+  // componentDidMount + componentDidUpdate = useEffect
+  useEffect(() => {
     // 비밀번호 입력창 이벤트 등록
     document.getElementById("user_pwd").addEventListener("keydown", (e) => {
       // 엔터키 입력 시
       if (e.which === 13) {
         e.preventDefault();
-        this.signIn(); // 로그인 진행
+        signIn(); // 로그인 진행
       }
     });
-  }
+  }, [signIn]);
 
-  render() {
-    return (
-      <div id="div_signIn">
-        <h3> [로그인 화면] </h3>
-        <div className="defaultDiv">
-          <div>
-            <input type="text" id="user_id" placeholder="ID 입력" />
-          </div>
-          <div>
-            <input type="password" id="user_pwd" placeholder="PWD 입력" />
-          </div>
-          <input type="button" value="로그인" onClick={this.signIn} />
+  return (
+    <div id="div_signIn">
+      <h3> [로그인 화면] </h3>
+      <div className="defaultDiv">
+        <div>
+          <input type="text" id="user_id" placeholder="ID 입력" />
         </div>
+        <div>
+          <input type="password" id="user_pwd" placeholder="PWD 입력" />
+        </div>
+        <input type="button" value="로그인" onClick={signIn} />
       </div>
-    );
-  }
+    </div>
+  );
 }
+
+export default SignInForm;

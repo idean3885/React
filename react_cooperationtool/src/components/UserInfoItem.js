@@ -51,16 +51,28 @@ export default class UserInfoItem extends Component {
         document.location.href = "/";
       })
       .catch((error) => {
-        const res = error.response;
+        let msg = "";
+        // then 과정에서 발생한 로직 에러 처리
+        if (error.name !== undefined) {
+          msg = error.name + " : " + error.message;
+        } else {
+          const res = error?.response;
 
-        // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
-        const msg =
-          res?.data?.msg !== undefined
-            ? res.data.msg
-            : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다. API서버 상태 및 기능 확인하시기 바랍니다.";
+          // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+          msg =
+            res?.data?.msg !== undefined
+              ? res.data.msg
+              : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
+
+          // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
+          const status = res?.status !== undefined ? res.status : 405;
+
+          // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
+          if (status === 405) {
+            return (document.location.href = "/");
+          }
+        }
         alert(msg);
-
-        console.error(error);
 
         return (document.location.href = "/");
       });
@@ -82,23 +94,29 @@ export default class UserInfoItem extends Component {
         return this.props.viewProject(result.pjtInfo);
       })
       .catch((error) => {
-        const res = error.response;
+        let msg = "";
+        // then 과정에서 발생한 로직 에러 처리
+        if (error.name !== undefined) {
+          msg = error.name + " : " + error.message;
+        } else {
+          const res = error?.response;
 
-        // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
-        let status = res?.status !== undefined ? res.status : 405;
+          // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+          msg =
+            res?.data?.msg !== undefined
+              ? res.data.msg
+              : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
 
-        // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
-        const msg =
-          res?.data?.msg !== undefined
-            ? res.data.msg
-            : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다. API서버 상태 및 기능 확인하시기 바랍니다.";
+          // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
+          const status = res?.status !== undefined ? res.status : 405;
+
+          // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
+          if (status === 405) {
+            return (document.location.href = "/");
+          }
+        }
         alert(msg);
         document.getElementById("msgDiv").innerHTML = msg;
-
-        // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
-        if (status === 405) {
-          return (document.location.href = "/");
-        }
 
         return console.error(error);
       });
@@ -143,22 +161,29 @@ export default class UserInfoItem extends Component {
         elem_pjtName.value = "";
       })
       .catch((error) => {
-        const res = error.response;
+        let msg = "";
+        // then 과정에서 발생한 로직 에러 처리
+        if (error.name !== undefined) {
+          msg = error.name + " : " + error.message;
+        } else {
+          const res = error?.response;
 
-        // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
-        let status = res?.status !== null ? res.status : 405;
-        // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
-        const msg =
-          res?.data?.msg !== undefined
-            ? res.data.msg
-            : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다. API서버 상태 및 기능 확인하시기 바랍니다.";
+          // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+          msg =
+            res?.data?.msg !== undefined
+              ? res.data.msg
+              : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
+
+          // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
+          const status = res?.status !== undefined ? res.status : 405;
+
+          // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
+          if (status === 405) {
+            return (document.location.href = "/");
+          }
+        }
         alert(msg);
         document.getElementById("msgDiv").innerHTML = msg;
-
-        // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
-        if (status === 405) {
-          return (document.location.href = "/");
-        }
 
         return console.error(error);
       });
@@ -169,8 +194,8 @@ export default class UserInfoItem extends Component {
    * Util 에서 함수 이름으로 인터벌타이머를 관리하기 위해 map{"함수 이름": funcion()} 으로 생성함.
    */
   getLoginUserinfo = {
-	// 화살표 함수로 만들 경우 this가 자동으로 바인딩된다.
-	// 화살표 함수는 이름을 설정할 수 없기 때문에 map 으로 설정하여 인터벌 타이머ID에 사용될 키 값을 따로 정한다.
+    // 화살표 함수로 만들 경우 this가 자동으로 바인딩된다.
+    // 화살표 함수는 이름을 설정할 수 없기 때문에 map 으로 설정하여 인터벌 타이머ID에 사용될 키 값을 따로 정한다.
     getLoginUserinfo: () => {
       const { apiUrl } = this.props;
 
@@ -199,13 +224,19 @@ export default class UserInfoItem extends Component {
         .catch((error) => {
           Util.stopInterval(this.getLoginUserinfo);
 
-          const res = error.response;
+          let msg = "";
+          // then 과정에서 발생한 로직 에러 처리
+          if (error.name !== undefined) {
+            msg = error.name + " : " + error.message;
+          } else {
+            const res = error?.response;
 
-          // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
-          const msg =
-            res?.data?.msg !== undefined
-              ? res.data.msg
-              : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다. API서버 상태 및 기능 확인하시기 바랍니다.";
+            // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+            msg =
+              res?.data?.msg !== undefined
+                ? res.data.msg
+                : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
+          }
           alert(msg);
           document.getElementById("msgDiv").innerHTML = msg;
 
