@@ -40,12 +40,11 @@ function SignInForm(props) {
         elem_userPwd.value = ""; // 입력한 비밀번호 지우기
 
         let msg = "";
+        const res = error?.response;
         // then 과정에서 발생한 로직 에러 처리
-        if (error.name !== undefined) {
+        if (error.name !== undefined && res === undefined) {
           msg = error.name + " : " + error.message;
         } else {
-          const res = error?.response;
-
           // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
           msg =
             res?.data?.msg !== undefined

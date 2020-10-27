@@ -8,11 +8,10 @@ export default class Util {
 	 * 이미 인터벌이 진행중이라면 시작하지 않는다.
 	 * 
 	 * @param sec [인터벌 시간(초)]
-	 * @param obj [함수 객체 = {함수이름 : 인터벌 함수}]
+	 * @param function [인터벌 함수]
+	 * @param key [진행중인 인터벌을 구분할 key 값]
 	 * */
-	static startInterval = (sec, obj)=> {
-		const key = Object.keys(obj)[0];
-		const cb = obj[key];	// 함수 이름을 키로 설정    
+	static startInterval = (sec, cb, key)=> {
 
 		console.log("Interval Start : " + key);
 
@@ -31,11 +30,9 @@ export default class Util {
      * 
      * 인터벌을 중지한다. 해당 콜백함수에 대한 인터벌이 없다면 그냥 종료한다.
      * 
-     * @param obj [함수 객체 = {함수이름 : 인터벌 함수}]
+     * @param key [진행중인 인터벌 key]
      * */
-    static stopInterval = (obj)=> {
-		const key = Object.keys(obj)[0];
-
+    static stopInterval = (key)=> {
 		const timerId = this.timerObj[key];
 
 		console.log('Interval stop : ' + key);
