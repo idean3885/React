@@ -63,7 +63,7 @@ function GroupItem(props) {
         document.getElementById("msgDiv").innerHTML = msg;
 
         // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
-        let status = res?.status !== null ? res.status : 400;
+        let status = res?.status !== undefined ? res.status : 400;
 
         // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
         if (status === 405) {
@@ -115,7 +115,7 @@ function GroupItem(props) {
         document.getElementById("msgDiv").innerHTML = msg;
 
         // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
-        let status = res?.status !== null ? res.status : 400;
+        let status = res?.status !== undefined ? res.status : 400;
 
         // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
         if (status === 405) {
@@ -129,106 +129,109 @@ function GroupItem(props) {
   // 동기화 인터벌 토글
   const toggleSyncInterval = useCallback(
     (cb) => {
-      const key = Object.keys(cb)[0]; // 함수 이름(키값) 을 타이머아이디로 설정
+      const key = "syncBoard"; // 함수 이름을 타이머아이디로 설정
       const timerId = Util.timerObj[key];
 
       if (timerId === undefined && grpName !== null) {
-        Util.startInterval(1, cb, 'syncBoard');
+        Util.startInterval(1, cb, key);
         setValue_syncBoard("게시글 동기화 중지");
       } else if (timerId) {
-        Util.stopInterval('syncBoard');
+        Util.stopInterval(key);
         setValue_syncBoard("게시글 동기화 시작");
       } else {
-        //alert('group Select Plz.');
+        Util.stopInterval(key);
+        alert("그룹이 선택되지 않았습니다. 그룹 선택 후 다시 시도해주십시오.");
       }
     },
     [grpName]
   );
 
   // 게시글 동기화
+
   const syncBoard = useCallback(() => {
-	const { apiUrl } = props;
+    const { apiUrl } = props;
 
-	axios({
-	  method: "post",
-	  url: apiUrl + "/board/" + pjtName + "/" + grpName + "/syncBoard",
-	  withCredentials: true,
-	  data: {
-		syncTime: syncTime, // 최종 동기화 시간을 전달하여 그 후의 데이터만 읽어오도록 한다.
-	  },
-	})
-	  .then((res) => {
-		const result = res.data;
-		const status = res.status;
+    axios({
+      method: "post",
+      url: apiUrl + "/board/" + pjtName + "/" + grpName + "/syncBoard",
+      withCredentials: true,
+      data: {
+        syncTime: document.getElementById("lbl_syncTime").innerHTML, // 최종 동기화 시간을 전달하여 그 후의 데이터만 읽어오도록 한다.
+      },
+    })
+      .then((res) => {
+        const result = res.data;
+        const status = res.status;
 
-		// 응답 데이터가 잘못된 경우
-		// TODO: API 통신 인증 -> API 통신 전 인증하여 응답 데이터를 검증할 필요가 없도록 해야 한다.
-		if (result?.msg === undefined) {
-		  throw new Error("Error! Invalid response data : " + res.data);
-		}
+        // 응답 데이터가 잘못된 경우
+        // TODO: API 통신 인증 -> API 통신 전 인증하여 응답 데이터를 검증할 필요가 없도록 해야 한다.
+        if (result?.msg === undefined) {
+          throw new Error("Error! Invalid response data : " + res.data);
+        }
 
-		let isBottom = false;
-		const scrollTop = document.getElementById("boardDiv").scrollTop; // 현재 위치
-		const scrollHeight = document.getElementById("boardDiv").scrollHeight; // 스크롤 높이
-		if (scrollTop === scrollHeight - 700) {
-		  // 스크롤 높이(700px) 만큼 오차가 생겨 조정
-		  isBottom = true;
-		}
+        let isBottom = false;
+        const scrollTop = document.getElementById("boardDiv").scrollTop; // 현재 위치
+        const scrollHeight = document.getElementById("boardDiv").scrollHeight; // 스크롤 높이
+        if (scrollTop === scrollHeight - 700) {
+          // 스크롤 높이(700px) 만큼 오차가 생겨 조정
+          isBottom = true;
+        }
 
-		// 추가된 게시글이 있으면 추가
-		if (status!==204 && result.boardList) {
-		  let syncList = boardList.concat(result.boardList); // 이전 게시글 + 추가된 게시글
+        // 추가된 게시글이 있으면 추가
+        if (
+          status !== 204 &&
+          result.boardList !== null &&
+          result.boardList.length !== 0
+        ) {
+          let syncList = boardList.concat(result.boardList); // 이전 게시글 + 추가된 게시글
 
-		  // const boardList = result.boardList;	// 추가된 게시글
+          // const boardList = result.boardList;	// 추가된 게시글
 
-		  // 게시글 추가 및 동기화 시간 갱신
+          // 게시글 추가
 		  setBoardList(syncList);
-		  setSyncTime(result.syncTime);
-		  
-		  // 스크롤 위치가 맨 아래였을 때만 게시글 추가 후 스크롤 이동.
-		  if (isBottom) {
-			document.getElementById(
-			  "boardDiv"
-			).scrollTop = document.getElementById("boardDiv").scrollHeight;
-		  }
+
+          // 스크롤 위치가 맨 아래였을 때만 게시글 추가 후 스크롤 이동.
+          if (isBottom) {
+            document.getElementById(
+              "boardDiv"
+            ).scrollTop = document.getElementById("boardDiv").scrollHeight;
+          }
 		}
-	  })
-	  .catch((error) => {
-		Util.stopInterval('syncBoard');
+		
+		// 동기화 시간 갱신
+		setSyncTime(result.syncTime);
+      })
+      .catch((error) => {
+        Util.stopInterval("syncBoard");
 
-		let msg = "";
-		const res = error?.response;
-		// then 과정에서 발생한 로직 에러 처리
-		if (error.name !== undefined && res === undefined) {
-		  msg = error.name + " : " + error.message;
-		} else {
-		  // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
-		  msg =
-			res?.data?.msg !== undefined
-			  ? res.data.msg
-			  : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
-		}
-		alert(msg);
-		document.getElementById("msgDiv").innerHTML = msg;
+        let msg = "";
+        const res = error?.response;
+        // then 과정에서 발생한 로직 에러 처리
+        if (error.name !== undefined && res === undefined) {
+          msg = error.name + " : " + error.message;
+        } else {
+          // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+          msg =
+            res?.data?.msg !== undefined
+              ? res.data.msg
+              : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
+        }
+        alert(msg);
+        document.getElementById("msgDiv").innerHTML = msg;
 
-		// apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
-		let status = res?.status !== null ? res.status : 400;
+        // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
+        let status = res?.status !== undefined ? res.status : 400;
 
-		// 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
-		if (status === 405) {
-		  return (document.location.href = "/");
-		}
+        // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
+        if (status === 405) {
+          return (document.location.href = "/");
+        }
 
-		return console.error(error);
-	  });
-  }, [props, pjtName, grpName, boardList, syncTime]);
+        return console.error(error);
+      });
+  }, [props, pjtName, grpName, boardList]);
 
   useEffect(() => {
-    // 인터벌 중지
-	// 기존에 동기화가 진행 중일 수도 있기 때문에 일단 중지시킨다.
-	// TODO: setState 할 경우 useEffect()가 다시 실행되는건지 stopInterval 이 매번 실행된다.
-    // Util.stopInterval('syncBoard')
-
     // 게시글 내용 이벤트 등록
     document
       .getElementById("board_contents")
@@ -242,7 +245,7 @@ function GroupItem(props) {
           }
         }
       });
-  }, [addPost, syncBoard]);
+  }, [addPost]);
 
   // state 중 boardList 만 가져옴
   const li_boardList = boardList.map((board, i) => (
@@ -290,7 +293,11 @@ function GroupItem(props) {
             toggleSyncInterval(syncBoard);
           }}
         />
-        동기화 시간 : {syncTime}
+		{/* 
+			state로만 할 경우 콜백함수 내에서 상태값이 실시간으로 반영되지 않아 문제가 생긴다.
+			이를 해결하기 위해 레이블에 넣고 다시 불러오는 식으로 수정 
+		*/}
+        동기화 시간 : <label id="lbl_syncTime">{syncTime}</label>
         <div className="defaultDiv">
           <div
             className="scrollDiv"

@@ -99,7 +99,7 @@ function UserInfoItem(props) {
           document.getElementById("msgDiv").innerHTML = msg;
 
           // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
-          let status = res?.status !== null ? res.status : 400;
+          let status = res?.status !== undefined ? res.status : 400;
 
           // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
           if (status === 405) {
@@ -161,7 +161,7 @@ function UserInfoItem(props) {
         document.getElementById("msgDiv").innerHTML = msg;
 
         // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
-        let status = res?.status !== null ? res.status : 400;
+        let status = res?.status !== undefined ? res.status : 400;
 
         // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
         if (status === 405) {
@@ -190,13 +190,16 @@ function UserInfoItem(props) {
 		// 사용자 정보가 조회된 경우(로그인한 경우)
 		const loginUser = result.userInfo;
 
+    // 화면에 보여줄 값 먼저 설정
+    setUserId(loginUser.userId);
+		setUserName(loginUser.userName);
+		setPjtList(loginUser.joinProjects);
+
+    // 설정된 값이 보여지도록 style 변경
 		setSignInStyle("none");
 		setSignUpStyle("none");
 		setSignOutStyle("block");
 		setUserInfoStyle("block");
-		setUserId(loginUser.userId);
-		setUserName(loginUser.userName);
-		setPjtList(loginUser.joinProjects);
 	  })
 	  .catch((error) => {
 		Util.stopInterval('getLoginUserInfo');
@@ -229,6 +232,7 @@ function UserInfoItem(props) {
     // 위 과정으로 인해 무한루프가 발생한다.
     // 이를 막기 위해 렌더링 안에서 re rendering이 발생할 수 있는 setState 는 하지 않는다.
     if (props.isStart) {
+      // TODO: 화면이 렌더링될 때마다 해당 메소드가 실행된다. 인터벌을 관리할 컴포넌트가 따로 있어야될 듯 하다.
       Util.startInterval(60, getLoginUserInfo, 'getLoginUserInfo');
     }
   }, [props, getLoginUserInfo]);

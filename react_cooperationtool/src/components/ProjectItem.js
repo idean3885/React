@@ -70,7 +70,7 @@ function ProjectItem(props) {
             document.getElementById("msgDiv").innerHTML = msg;
     
             // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
-            let status = res?.status !== null ? res.status : 400;
+            let status = res?.status !== undefined ? res.status : 400;
     
             // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
             if (status === 405) {
@@ -128,7 +128,7 @@ function ProjectItem(props) {
             document.getElementById("msgDiv").innerHTML = msg;
     
             // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
-            let status = res?.status !== null ? res.status : 400;
+            let status = res?.status !== undefined ? res.status : 400;
     
             // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
             if (status === 405) {
@@ -158,8 +158,8 @@ function ProjectItem(props) {
               setIsViewGroup(false);
               setGrpInfo({});
 
-              setIsViewGroup(true);
               setGrpInfo(grpInfo);
+              setIsViewGroup(true);
             }
           })
           .catch((error) => {
@@ -179,7 +179,7 @@ function ProjectItem(props) {
             document.getElementById("msgDiv").innerHTML = msg;
     
             // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
-            let status = res?.status !== null ? res.status : 400;
+            let status = res?.status !== undefined ? res.status : 400;
     
             // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
             if (status === 405) {
