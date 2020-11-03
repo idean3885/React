@@ -11,10 +11,9 @@ function ProjectItem(props) {
         document.location.href = '/';
     }
 
-
     const [pjtName] = useState(pjtInfo.pjtName);
     const [pjtOwner] = useState(pjtInfo.pjtOwner);
-    let [pjtMember, setPjtMember] = useState(pjtInfo.pjtMember.join(', '));
+    let [pjtMember, setPjtMember] = useState(pjtInfo.pjtMember);
     let [grpList, setGrpList] = useState(pjtInfo.pjtGroups);
     let [isViewGroup, setIsViewGroup] = useState(false);
     let [grpInfo, setGrpInfo] = useState({});
@@ -31,11 +30,15 @@ function ProjectItem(props) {
         if (pjtName === "") {
           return alert("프로젝트가 선택되지 않았습니다.");
         }
+
+        if (pjtMember.includes(memberId)) {
+          return alert("입력한 사용자는 이미 프로젝트에 참여하고 있습니다. ID를 다시 확인해주세요.");
+        }
     
         const { apiUrl } = props;
         axios({
           method: "post",
-          url: apiUrl + "/board/" + pjtName + "/addPjtMember",
+          url: apiUrl + "/board/" + pjtName + "/invitePjtMember",
           withCredentials: true,
           data: {
             memberId: memberId,
@@ -46,9 +49,6 @@ function ProjectItem(props) {
     
             alert(result.msg);
             document.getElementById("msgDiv").innerHTML = result.msg;
-    
-            // 추가된 참여자 세팅
-            setPjtMember(pjtMember + ", " + memberId);
     
             // 입력한 사용자명 지우기
             elem_memberId.value = "";
@@ -214,7 +214,7 @@ function ProjectItem(props) {
             <ol>
               <li>프로젝트 이름 : {pjtName}</li>
               <li>소유자(생성자) : {pjtOwner}</li>
-              <li>프로젝트 참여자 : {pjtMember}</li>
+              <li>프로젝트 참여자 : {pjtMember.join(', ')}</li>
               참여자 초대 : <input type="text" id="input_pjtMemberId" />
               <input type="button" value="초대" onClick={inviteUser} />
               <li>생성된 그룹</li>
