@@ -188,7 +188,7 @@ function GroupItem(props) {
           // const boardList = result.boardList;	// 추가된 게시글
 
           // 게시글 추가
-		  setBoardList(syncList);
+		      setBoardList(syncList);
 
           // 스크롤 위치가 맨 아래였을 때만 게시글 추가 후 스크롤 이동.
           if (isBottom) {
@@ -196,10 +196,10 @@ function GroupItem(props) {
               "boardDiv"
             ).scrollTop = document.getElementById("boardDiv").scrollHeight;
           }
-		}
+		    }
 		
-		// 동기화 시간 갱신
-		setSyncTime(result.syncTime);
+        // 동기화 시간 갱신
+        setSyncTime(result.syncTime);
       })
       .catch((error) => {
         Util.stopInterval("syncBoard");
