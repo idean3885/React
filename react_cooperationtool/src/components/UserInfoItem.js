@@ -230,7 +230,7 @@ function UserInfoItem(props) {
 
     axios({
       method:'POST',
-      url: apiUrl + "/auth/getLoginUser",
+      url: apiUrl + "/auth/getNoticeList",
       withCredentials: true,
       data: {
         syncTime: document.getElementById('lbl_noticeSyncTime').innerHTML
