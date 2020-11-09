@@ -204,7 +204,8 @@ function UserInfoItem(props) {
       setUserInfoStyle("block");
 	  })
 	  .catch((error) => {
-      Util.stopInterval('getLoginUserInfo');
+      Util.stopInterval('getLoginUserInfo');  // 사용자 정보 조회
+      Util.stopInterval('getNoticeList');     // 알림함 갱신
 
       let msg = "";
       const res = error?.response;
@@ -225,6 +226,9 @@ function UserInfoItem(props) {
 	  });
   }, [props, viewSignIn]);
 
+  /**
+   * 알림함 갱신
+   */
   const getNoticeList = useCallback(()=> {
     const { apiUrl } = props;
 
@@ -262,7 +266,8 @@ function UserInfoItem(props) {
       setNoticeSyncTime(result.syncTime);
     })
     .catch(e=> {
-      Util.stopInterval('getNoticeList');
+      Util.stopInterval('getLoginUserInfo');  // 사용자 정보 조회
+      Util.stopInterval('getNoticeList');     // 알림함 갱신
 
       let msg = "";
       const res = e?.response;
@@ -293,9 +298,15 @@ function UserInfoItem(props) {
     if (props.isStart) {
       // TODO: 화면이 렌더링될 때마다 해당 메소드가 실행된다. 인터벌을 관리할 컴포넌트가 따로 있어야될 듯 하다.
       Util.startInterval(60, getLoginUserInfo, 'getLoginUserInfo');
-      Util.startInterval(10, getNoticeList, 'getNoticeList');
+
+      // 사용자 정보가 조회된 경우에만 알림함 갱신하도록 일정 시간 뒤 인터벌이 동작하도록 한다.
+      setTimeout(null, 1500);
+
+      if (userId!==''){
+        Util.startInterval(10, getNoticeList, 'getNoticeList');
+      }      
     }
-  }, [props, getLoginUserInfo, getNoticeList]);
+  }, [props, getLoginUserInfo, getNoticeList, userId]);
 
   // 프로젝트 목록
   const li_pjtList = pjtList.map((pjtName, i) => (
@@ -335,21 +346,23 @@ function UserInfoItem(props) {
   // 알림함 목록
   const li_noticeList = 
     noticeList.map((notice, i) => (
-      <div key={i}>
-        <li>isRead: {notice.isRead}</li>
-        <li>title: {notice.title}</li>
-        <li>reg_dt: {notice.reg_dt}</li>
-        <li>use_yn: {notice.use_yn}</li>
-        <li>
-          contents:
-          <textarea
-            name="contents"
-            rows="3"
-            readOnly
-            style={{ resize: "none", width: "90%" }}
-            value={notice.contents}
-          />
-        </li>
+      <div key={i} className="defaultDiv">
+        <ol>
+          <li>isRead: {notice.isRead===false && "읽지 않음."}</li>
+          <li>title: {notice.title}</li>
+          <li>reg_dt: {notice.reg_dt}</li>
+          <li>use_yn: {notice.use_yn && '삭제되지 않음.'}</li>
+          <li>
+            contents:
+            <textarea
+              name="contents"
+              rows="3"
+              readOnly
+              style={{ resize: "none", width: "90%" }}
+              value={notice.contents}
+            />
+          </li>
+        </ol>
       </div>
     ));
 
@@ -388,7 +401,7 @@ function UserInfoItem(props) {
             <li id="li_noticeList">
               내 알림함
               동기화 시간 : <label id="lbl_noticeSyncTime">{noticeSyncTime}</label>
-              <ol>{li_noticeList}</ol>
+              {li_noticeList}
             </li>
             <li id="li_category">카테고리</li>
           </ol>
