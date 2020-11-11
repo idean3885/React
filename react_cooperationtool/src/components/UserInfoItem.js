@@ -291,12 +291,13 @@ function UserInfoItem(props) {
   /**
    * 프로젝트 초대 수락
    */
-  const joinPjt = useCallback((pjtName)=> {
+  const joinPjt = useCallback((bodyData)=> {
     const {apiUrl} = props;
+    const {pjtName} = bodyData;
 
     axios({
       method: 'post',
-      url: apiUrl + '/' + pjtName + '/addPjtMember',
+      url: apiUrl + '/board/' + pjtName + '/addPjtMember',
       withCredentials: true,
       data: { memberId: userId }
     })
@@ -327,6 +328,46 @@ function UserInfoItem(props) {
       document.getElementById("msgDiv").innerHTML = msg;
 	  });
   }, [props, userId, getLoginUserInfo]);
+
+  /**
+   * 알림 수정
+   * 
+   * 1. 읽음 처리
+   * 2. 삭제
+   */
+  const modNotice = useCallback((reg_dt, mode)=> {
+    let data = {};
+    if (mode === 'delete') {
+      data.ues_yn = false;
+    } else if (mode === 'read') {
+      data.isRead = true;
+    } else {
+      return alert('설정된 값이 없습니다.');
+    }
+
+    const {apiUrl} = props;
+    axios({
+      method:'post',
+      url: apiUrl + '/auth/modNotice',
+      withCredentials: true,
+      data: data
+    })
+    .then(res=> {
+
+    })
+    .catch(e=> {
+
+    });
+  }, [props]);
+
+  /**
+   * 알림 처리 기능
+   */
+  const procNotice = useCallback((type, bodyData)=> {
+    if (type === 'invitePjt') {
+      joinPjt(bodyData);
+    }
+  }, [joinPjt]);
 
   // 렌더가 완료된 후 호출되는 콜백함수
   // componentDidMount + componentDidUpdate = useEffect
@@ -393,17 +434,7 @@ function UserInfoItem(props) {
           <li>reg_dt: {notice.reg_dt}</li>
           <li>use_yn: {notice.use_yn && '삭제되지 않음.'}</li>
           <li>
-            {notice.title.startsWith('[프로젝트 초대]')
-              ? <p>수락하시려면 <input type="button" onClick={()=>{joinPjt(notice.contents)}} value="수락"/> 버튼 클릭~</p>
-              : <p>contents: {notice.contents}</p>
-            }
-            {/* <textarea
-              name="contents"
-              rows="3"
-              readOnly
-              style={{ resize: "none", width: "90%" }}
-              value=
-            /> */}
+              <p>수락하시려면 <input type="button" onClick={()=>{procNotice(notice.type, notice.bodyData)}} value="수락"/> 버튼 클릭~</p>
           </li>
         </ol>
       </div>
