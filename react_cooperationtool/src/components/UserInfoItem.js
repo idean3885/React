@@ -286,7 +286,47 @@ function UserInfoItem(props) {
 
       return viewSignIn();
     })
-  }, [props, viewSignIn, noticeList]);    
+  }, [props, viewSignIn, noticeList]);
+
+  /**
+   * 프로젝트 초대 수락
+   */
+  const joinPjt = useCallback((pjtName)=> {
+    const {apiUrl} = props;
+
+    axios({
+      method: 'post',
+      url: apiUrl + '/' + pjtName + '/addPjtMember',
+      withCredentials: true,
+      data: { memberId: userId }
+    })
+    .then(res=> {
+      const result = res.data;
+
+      // 디버그 표시
+      document.getElementById("msgDiv").innerHTML = result.msg;
+      alert(result.msg);
+
+      // 사용자 정보 갱신
+      getLoginUserInfo();      
+    })
+    .catch((error) => {
+      let msg = "";
+      const res = error?.response;
+      // then 과정에서 발생한 로직 에러 처리
+      if (error.name !== undefined && res === undefined) {
+        msg = error.name + " : " + error.message;
+      } else {
+        // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+        msg =
+        res?.data?.msg !== undefined
+          ? res.data.msg
+          : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
+      }
+      alert(msg);
+      document.getElementById("msgDiv").innerHTML = msg;
+	  });
+  }, [props, userId, getLoginUserInfo]);
 
   // 렌더가 완료된 후 호출되는 콜백함수
   // componentDidMount + componentDidUpdate = useEffect
@@ -353,14 +393,17 @@ function UserInfoItem(props) {
           <li>reg_dt: {notice.reg_dt}</li>
           <li>use_yn: {notice.use_yn && '삭제되지 않음.'}</li>
           <li>
-            contents:
-            <textarea
+            {notice.title.startsWith('[프로젝트 초대]')
+              ? <p>수락하시려면 <input type="button" onClick={()=>{joinPjt(notice.contents)}} value="수락"/> 버튼 클릭~</p>
+              : <p>contents: {notice.contents}</p>
+            }
+            {/* <textarea
               name="contents"
               rows="3"
               readOnly
               style={{ resize: "none", width: "90%" }}
-              value={notice.contents}
-            />
+              value=
+            /> */}
           </li>
         </ol>
       </div>
