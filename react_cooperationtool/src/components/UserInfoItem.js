@@ -330,44 +330,122 @@ function UserInfoItem(props) {
   }, [props, userId, getLoginUserInfo]);
 
   /**
-   * 알림 수정
-   * 
-   * 1. 읽음 처리
-   * 2. 삭제
+   * 알림 읽음 처리
    */
-  const modNotice = useCallback((reg_dt, mode)=> {
-    let data = {};
-    if (mode === 'delete') {
-      data.ues_yn = false;
-    } else if (mode === 'read') {
-      data.isRead = true;
-    } else {
-      return alert('설정된 값이 없습니다.');
-    }
-
+  const readNotice = useCallback((bodyData)=> {
     const {apiUrl} = props;
+    const {reg_dt} = bodyData;
+
     axios({
       method:'post',
       url: apiUrl + '/auth/modNotice',
       withCredentials: true,
-      data: data
+      data: {
+        reg_dt: reg_dt, 
+        updateData: {isRead: true}
+      }
     })
     .then(res=> {
+      const result = res.data;
 
+      // 디버그 표시
+      document.getElementById("msgDiv").innerHTML = result.msg;
+      alert(result.msg);
+
+      // 사용자 정보 갱신
+      getLoginUserInfo();   
     })
     .catch(e=> {
+      let msg = "";
+      const res = e?.response;
+      // then 과정에서 발생한 로직 에러 처리
+      if (e.name !== undefined && res === undefined) {
+        msg = e.name + " : " + e.message;
+      } else {
+        // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+        msg =
+        res?.data?.msg !== undefined
+          ? res.data.msg
+          : "읽음 처리에 실패하였습니다.\nAPI서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
+      }
+      alert(msg);
+      document.getElementById("msgDiv").innerHTML = msg;
 
+      const status = res?.status;
+      if (status===undefined || 405) {
+        //alert('권한이 없습니다. 다시 로그인해주시기 바랍니다.');
+        //signOut();
+      }
     });
-  }, [props]);
+  }, [props, getLoginUserInfo, signOut]);
+
+  /**
+   * 알림 삭제
+   */
+  const delNotice = useCallback((bodyData)=> {
+    const {apiUrl} = props;
+    const {reg_dt} = bodyData;
+
+    axios({
+      method:'post',
+      url: apiUrl + '/auth/modNotice',
+      withCredentials: true,
+      data: {reg_dt: reg_dt, 
+        updateData: {use_yn: false}
+      }
+    })
+    .then(res=> {
+      const result = res.data;
+
+      // 디버그 표시
+      document.getElementById("msgDiv").innerHTML = result.msg;
+      alert(result.msg);
+
+      // 사용자 정보 갱신
+      getLoginUserInfo();   
+    })
+    .catch(e=> {
+      let msg = "";
+      const res = e?.response;
+      // then 과정에서 발생한 로직 에러 처리
+      if (e.name !== undefined && res === undefined) {
+        msg = encodeURI.name + " : " + e.message;
+      } else {
+        // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+        msg =
+        res?.data?.msg !== undefined
+          ? res.data.msg
+          : "알림 삭제에 실패하였습니다.\nAPI서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
+      }
+      alert(msg);
+      document.getElementById("msgDiv").innerHTML = msg;
+
+      const status = res?.status;
+      if (status===undefined || 405) {
+        alert('권한이 없습니다. 다시 로그인해주시기 바랍니다.');
+        signOut();
+      }
+    });
+  }, [props, getLoginUserInfo, signOut]);
 
   /**
    * 알림 처리 기능
    */
   const procNotice = useCallback((type, bodyData)=> {
-    if (type === 'invitePjt') {
-      joinPjt(bodyData);
+    switch(type){
+      case 'invitePjt': 
+        joinPjt(bodyData);
+        break;
+      case 'read':
+        readNotice(bodyData);
+        break;
+      case 'delete':
+        delNotice(bodyData);
+        break;
+      default:
+        console.log('해당되는 작업이 없습니다.');
     }
-  }, [joinPjt]);
+  }, [joinPjt, readNotice, delNotice]);
 
   // 렌더가 완료된 후 호출되는 콜백함수
   // componentDidMount + componentDidUpdate = useEffect
@@ -427,12 +505,12 @@ function UserInfoItem(props) {
   // 알림함 목록
   const li_noticeList = 
     noticeList.map((notice, i) => (
-      <div key={i} className="defaultDiv">
+      <div key={i} className="defaultDiv" style={{maxWidth: '500px'}}>
         <ol>
-          <li>isRead: {notice.isRead===false && "읽지 않음."}</li>
+          <li>isRead: {notice.isRead===false && "읽지 않음."} <input type="button" onClick={()=>{procNotice('read', {reg_dt: notice.reg_dt})}} value="읽음 처리"/></li>
           <li>title: {notice.title}</li>
           <li>reg_dt: {notice.reg_dt}</li>
-          <li>use_yn: {notice.use_yn && '삭제되지 않음.'}</li>
+          <li>use_yn: {notice.use_yn && '삭제되지 않음.'} <input type="button" onClick={()=>{procNotice('delete', {reg_dt: notice.reg_dt})}} value="삭제 처리"/></li>
           <li>
               <p>수락하시려면 <input type="button" onClick={()=>{procNotice(notice.type, notice.bodyData)}} value="수락"/> 버튼 클릭~</p>
           </li>

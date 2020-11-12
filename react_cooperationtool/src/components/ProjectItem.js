@@ -13,7 +13,7 @@ function ProjectItem(props) {
 
     const [pjtName] = useState(pjtInfo.pjtName);
     const [pjtOwner] = useState(pjtInfo.pjtOwner);
-    let [pjtMember, setPjtMember] = useState(pjtInfo.pjtMember);
+    let [pjtMember] = useState(pjtInfo.pjtMember);
     let [grpList, setGrpList] = useState(pjtInfo.pjtGroups);
     let [isViewGroup, setIsViewGroup] = useState(false);
     let [grpInfo, setGrpInfo] = useState({});

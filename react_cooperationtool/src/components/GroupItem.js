@@ -267,8 +267,6 @@ function GroupItem(props) {
     </div>
   ));
 
-  // TODO: 스크롤 위치가 이전 위치를 반영하는 것을 보아 추가된 게시글 div 만 리렌더링 때 추가되는듯 하다.
-  //		 전체가 다시 그려지지 않는 이유를 확인해야 한다.
   return (
     <div>
       <div id="div_grpInfo">
