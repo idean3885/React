@@ -46,4 +46,13 @@ export default class Util {
 
 		delete this.timerObj[key];   // 타이머 목록에서 삭제
 	}
+
+	/**
+	 * 슬립 함수
+	 * @param {millisecond} delay [밀리세컨드]
+	 */
+	static sleep(delay) {
+		let start = new Date().getTime();
+		while(new Date().getTime() < start + delay);
+	}
 }

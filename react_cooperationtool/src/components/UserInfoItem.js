@@ -253,13 +253,18 @@ function UserInfoItem(props) {
       // 추가된 게시글이 있으면 추가
       if (
         status !== 204 &&
-        result.noticeList !== null &&
-        result.noticeList.length !== 0
+        result.noticeList !== null
       ) {
-        let syncList = noticeList.concat(result.noticeList); // 이전 게시글 + 추가된 게시글
-
-        // 게시글 추가
-        setNoticeList(syncList);
+        // 최초 동기화의 경우 
+        if (noticeSyncTime==='') {
+          console.log('init sync');
+          setNoticeList(result.noticeList); // 이전 목록이 없으므로 바로 세팅한다.
+        }
+        else {
+          console.log('after sync');
+          let syncList = noticeList.concat(result.noticeList); // 이전 알림 목록에 추가된 알림 목록을 더한다
+          setNoticeList(syncList);
+        }        
       }
       
       // 동기화 시간 갱신
@@ -286,7 +291,7 @@ function UserInfoItem(props) {
 
       return viewSignIn();
     })
-  }, [props, viewSignIn, noticeList]);
+  }, [props, viewSignIn, noticeList, noticeSyncTime]);
 
   /**
    * 프로젝트 초대 수락
@@ -352,8 +357,14 @@ function UserInfoItem(props) {
       document.getElementById("msgDiv").innerHTML = result.msg;
       alert(result.msg);
 
-      // 사용자 정보 갱신
-      getLoginUserInfo();   
+      // 알림함 갱신
+      // 기존 알림 목록을 새로 불러오기 위해 동기화 시간 초기화 후 알림 목록을 불러온다.
+      /**
+       * set으로 인해 rerendering 이 발생 -> useEffect() 함수가 실행되기 때문에
+       * useEffect 에 noticeSyncTime 이 '' 인 경우 알림함을 동기화 하도록 하였다.
+       * 억지로 한 느낌이기에 수정해야 할 듯 하다....
+       */
+      setNoticeSyncTime('');
     })
     .catch(e=> {
       let msg = "";
@@ -372,12 +383,12 @@ function UserInfoItem(props) {
       document.getElementById("msgDiv").innerHTML = msg;
 
       const status = res?.status;
-      if (status===undefined || 405) {
-        //alert('권한이 없습니다. 다시 로그인해주시기 바랍니다.');
-        //signOut();
+      if (status===405) {
+        alert('권한이 없습니다. 다시 로그인해주시기 바랍니다.');
+        signOut();
       }
     });
-  }, [props, getLoginUserInfo, signOut]);
+  }, [props, signOut]);
 
   /**
    * 알림 삭제
@@ -401,8 +412,14 @@ function UserInfoItem(props) {
       document.getElementById("msgDiv").innerHTML = result.msg;
       alert(result.msg);
 
-      // 사용자 정보 갱신
-      getLoginUserInfo();   
+      // 알림함 갱신
+      // 기존 알림 목록을 새로 불러오기 위해 동기화 시간 초기화
+      /**
+       * set으로 인해 rerendering 이 발생 -> useEffect() 함수가 실행되기 때문에
+       * useEffect 에 noticeSyncTime 이 '' 인 경우 알림함을 동기화 하도록 하였다.
+       * 억지로 한 느낌이기에 수정해야 할 듯 하다....
+       */
+      setNoticeSyncTime('');
     })
     .catch(e=> {
       let msg = "";
@@ -421,12 +438,12 @@ function UserInfoItem(props) {
       document.getElementById("msgDiv").innerHTML = msg;
 
       const status = res?.status;
-      if (status===undefined || 405) {
+      if (status===405) {
         alert('권한이 없습니다. 다시 로그인해주시기 바랍니다.');
         signOut();
       }
     });
-  }, [props, getLoginUserInfo, signOut]);
+  }, [props, signOut]);
 
   /**
    * 알림 처리 기능
@@ -458,14 +475,26 @@ function UserInfoItem(props) {
       // TODO: 화면이 렌더링될 때마다 해당 메소드가 실행된다. 인터벌을 관리할 컴포넌트가 따로 있어야될 듯 하다.
       Util.startInterval(60, getLoginUserInfo, 'getLoginUserInfo');
 
-      // 사용자 정보가 조회된 경우에만 알림함 갱신하도록 일정 시간 뒤 인터벌이 동작하도록 한다.
-      setTimeout(null, 1500);
-
+      // 사용자 정보가 있어야 알림함을 동기화할 수 있기 때문에 일정 시간 뒤에 인터벌이 실행되도록 한다.
       if (userId!==''){
-        Util.startInterval(10, getNoticeList, 'getNoticeList');
-      }      
+        setTimeout(Util.startInterval(10, getNoticeList, 'getNoticeList'), 1500);
+      }
     }
-  }, [props, getLoginUserInfo, getNoticeList, userId]);
+
+    /**
+     * 2020.11.12 dykim
+     * 
+     * 사용자 정보가 있고 알림함을 동기화하지 않은 경우 동기화 진행
+     * 알림 목록이 수정된 경우 알림 시간이 초기화되어 아래 로직이 실행되게 된다.
+     * 
+     * useState 로 수정할 경우 변경된 값이 비동기로 반영되어 알림함을 다시 동기화 시키기가 힘들다.
+     * 이를 해결하기 위해 값 변경 -> 렌더링 진행 -> useEffect() 실행 -> 알림함 동기화 진행
+     * 을 통해 초기화된 동기화 시간으로 getNoticeList() 메소드를 실행할 수 있도록 했다.
+     */
+    if (userId!=='' && noticeSyncTime==='') {
+      getNoticeList();
+    }
+  }, [props, noticeSyncTime, getLoginUserInfo, getNoticeList, userId]);
 
   // 프로젝트 목록
   const li_pjtList = pjtList.map((pjtName, i) => (
@@ -507,10 +536,10 @@ function UserInfoItem(props) {
     noticeList.map((notice, i) => (
       <div key={i} className="defaultDiv" style={{maxWidth: '500px'}}>
         <ol>
-          <li>isRead: {notice.isRead===false && "읽지 않음."} <input type="button" onClick={()=>{procNotice('read', {reg_dt: notice.reg_dt})}} value="읽음 처리"/></li>
+          <li>isRead: {notice.isRead? '읽음': "읽지 않음."} <input type="button" onClick={()=>{procNotice('read', {reg_dt: notice.reg_dt})}} value="읽음 처리"/></li>
           <li>title: {notice.title}</li>
           <li>reg_dt: {notice.reg_dt}</li>
-          <li>use_yn: {notice.use_yn && '삭제되지 않음.'} <input type="button" onClick={()=>{procNotice('delete', {reg_dt: notice.reg_dt})}} value="삭제 처리"/></li>
+          <li>use_yn: {notice.use_yn? '삭제되지 않음.': '삭제됨.'} <input type="button" onClick={()=>{procNotice('delete', {reg_dt: notice.reg_dt})}} value="삭제 처리"/></li>
           <li>
               <p>수락하시려면 <input type="button" onClick={()=>{procNotice(notice.type, notice.bodyData)}} value="수락"/> 버튼 클릭~</p>
           </li>
