@@ -48,6 +48,19 @@ export default class Util {
 	}
 
 	/**
+	 * 인터벌 실행여부 확인
+	 * 
+	 * @param {String} key [확인할 인터벌 이름]
+	 */
+	static isStartedInterval = (key)=>{
+		if (this.timerObj[key]!==undefined) {
+			return true;
+        } else {
+			return  false;
+		}
+	};
+
+	/**
 	 * 슬립 함수
 	 * @param {millisecond} delay [밀리세컨드]
 	 */

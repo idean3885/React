@@ -232,12 +232,13 @@ function UserInfoItem(props) {
   const getNoticeList = useCallback(()=> {
     const { apiUrl } = props;
 
+    const el_noticeSyncTime = document.getElementById('lbl_noticeSyncTime').innerHTML;
     axios({
       method:'POST',
       url: apiUrl + "/auth/getNoticeList",
       withCredentials: true,
       data: {
-        syncTime: document.getElementById('lbl_noticeSyncTime').innerHTML
+        syncTime: el_noticeSyncTime
       }
     })
     .then(res=> {
@@ -250,23 +251,19 @@ function UserInfoItem(props) {
         throw new Error("Error! Invalid response data : " + res.data);
       }
 
+      // 이전 알림 목록에 추가된 알림 목록을 더한다
+      console.log('before : ' + noticeList);
       // 추가된 게시글이 있으면 추가
       if (
-        status !== 204 &&
-        result.noticeList !== null
+        status !== 204
+        && result.noticeList !== null
+        && result.noticeList.length !== 0
       ) {
-        // 최초 동기화의 경우 
-        if (noticeSyncTime==='') {
-          console.log('init sync');
-          setNoticeList(result.noticeList); // 이전 목록이 없으므로 바로 세팅한다.
-        }
-        else {
-          console.log('after sync');
-          let syncList = noticeList.concat(result.noticeList); // 이전 알림 목록에 추가된 알림 목록을 더한다
-          setNoticeList(syncList);
-        }        
+        let syncList = noticeList.concat(result.noticeList); 
+        console.log('after : ' + syncList);
+        setNoticeList(syncList);  
       }
-      
+
       // 동기화 시간 갱신
       setNoticeSyncTime(result.syncTime);
     })
@@ -291,7 +288,7 @@ function UserInfoItem(props) {
 
       return viewSignIn();
     })
-  }, [props, viewSignIn, noticeList, noticeSyncTime]);
+  }, [props, viewSignIn, noticeList]);
 
   /**
    * 프로젝트 초대 수락
@@ -357,14 +354,7 @@ function UserInfoItem(props) {
       document.getElementById("msgDiv").innerHTML = result.msg;
       alert(result.msg);
 
-      // 알림함 갱신
-      // 기존 알림 목록을 새로 불러오기 위해 동기화 시간 초기화 후 알림 목록을 불러온다.
-      /**
-       * set으로 인해 rerendering 이 발생 -> useEffect() 함수가 실행되기 때문에
-       * useEffect 에 noticeSyncTime 이 '' 인 경우 알림함을 동기화 하도록 하였다.
-       * 억지로 한 느낌이기에 수정해야 할 듯 하다....
-       */
-      setNoticeSyncTime('');
+      // TODO : 알림함 갱신
     })
     .catch(e=> {
       let msg = "";
@@ -412,14 +402,7 @@ function UserInfoItem(props) {
       document.getElementById("msgDiv").innerHTML = result.msg;
       alert(result.msg);
 
-      // 알림함 갱신
-      // 기존 알림 목록을 새로 불러오기 위해 동기화 시간 초기화
-      /**
-       * set으로 인해 rerendering 이 발생 -> useEffect() 함수가 실행되기 때문에
-       * useEffect 에 noticeSyncTime 이 '' 인 경우 알림함을 동기화 하도록 하였다.
-       * 억지로 한 느낌이기에 수정해야 할 듯 하다....
-       */
-      setNoticeSyncTime('');
+      // TODO : 알림함 갱신
     })
     .catch(e=> {
       let msg = "";
@@ -473,28 +456,17 @@ function UserInfoItem(props) {
     // 이를 막기 위해 렌더링 안에서 re rendering이 발생할 수 있는 setState 는 하지 않는다.
     if (props.isStart) {
       // TODO: 화면이 렌더링될 때마다 해당 메소드가 실행된다. 인터벌을 관리할 컴포넌트가 따로 있어야될 듯 하다.
-      Util.startInterval(60, getLoginUserInfo, 'getLoginUserInfo');
+
+      if (!Util.isStartedInterval('getLoginUserInfo')){
+        Util.startInterval(60, getLoginUserInfo, 'getLoginUserInfo');
+      }      
 
       // 사용자 정보가 있어야 알림함을 동기화할 수 있기 때문에 일정 시간 뒤에 인터벌이 실행되도록 한다.
-      if (userId!==''){
+      if (userId!=='' && !Util.isStartedInterval('getNoticeList')){
         setTimeout(Util.startInterval(10, getNoticeList, 'getNoticeList'), 1500);
       }
     }
-
-    /**
-     * 2020.11.12 dykim
-     * 
-     * 사용자 정보가 있고 알림함을 동기화하지 않은 경우 동기화 진행
-     * 알림 목록이 수정된 경우 알림 시간이 초기화되어 아래 로직이 실행되게 된다.
-     * 
-     * useState 로 수정할 경우 변경된 값이 비동기로 반영되어 알림함을 다시 동기화 시키기가 힘들다.
-     * 이를 해결하기 위해 값 변경 -> 렌더링 진행 -> useEffect() 실행 -> 알림함 동기화 진행
-     * 을 통해 초기화된 동기화 시간으로 getNoticeList() 메소드를 실행할 수 있도록 했다.
-     */
-    if (userId!=='' && noticeSyncTime==='') {
-      getNoticeList();
-    }
-  }, [props, noticeSyncTime, getLoginUserInfo, getNoticeList, userId]);
+  }, [props, getLoginUserInfo, getNoticeList, userId, noticeSyncTime]);
 
   // 프로젝트 목록
   const li_pjtList = pjtList.map((pjtName, i) => (
