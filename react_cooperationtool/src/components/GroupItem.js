@@ -180,15 +180,20 @@ function GroupItem(props) {
         // 추가된 게시글이 있으면 추가
         if (
           status !== 204 &&
-          result.boardList !== null &&
-          result.boardList.length !== 0
+          result.boardList !== null
         ) {
-          let syncList = boardList.concat(result.boardList); // 이전 게시글 + 추가된 게시글
+          /**
+         * 2020.11.16 dykim - boardList 값이 저장되지 않아 동기화할 때마다 모든 목록이 사라진다.
+         * 전에 됬던 기능인데 갑자기 안되서 임시방편으로 항상 모든 목록을 불러오도록 수정
+         * 
+         * TODO: useCallback 제거 등 프론트 코드를 정리한 후 반드시 고칠 것.
+         */
+          // let syncList = boardList.concat(result.boardList); // 이전 게시글 + 추가된 게시글
 
           // const boardList = result.boardList;	// 추가된 게시글
 
           // 게시글 추가
-		      setBoardList(syncList);
+		      setBoardList(result.boardList);
 
           // 스크롤 위치가 맨 아래였을 때만 게시글 추가 후 스크롤 이동.
           if (isBottom) {
@@ -229,7 +234,7 @@ function GroupItem(props) {
 
         return console.error(error);
       });
-  }, [props, pjtName, grpName, boardList]);
+  }, [props, pjtName, grpName]);
 
   useEffect(() => {
     // 게시글 내용 이벤트 등록
@@ -245,7 +250,7 @@ function GroupItem(props) {
           }
         }
       });
-  }, [addPost]);
+  }, []);
 
   // state 중 boardList 만 가져옴
   const li_boardList = boardList.map((board, i) => (

@@ -52,7 +52,7 @@ export default class Util {
 	 * 
 	 * @param {String} key [확인할 인터벌 이름]
 	 */
-	static isStartedInterval = (key)=>{
+	static isRunningInterval = (key)=>{
 		if (this.timerObj[key]!==undefined) {
 			return true;
         } else {

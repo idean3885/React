@@ -251,17 +251,19 @@ function UserInfoItem(props) {
         throw new Error("Error! Invalid response data : " + res.data);
       }
 
-      // 이전 알림 목록에 추가된 알림 목록을 더한다
-      console.log('before : ' + noticeList);
       // 추가된 게시글이 있으면 추가
       if (
         status !== 204
         && result.noticeList !== null
-        && result.noticeList.length !== 0
       ) {
-        let syncList = noticeList.concat(result.noticeList); 
-        console.log('after : ' + syncList);
-        setNoticeList(syncList);  
+        /**
+         * 2020.11.16 dykim - noticeList에 값이 저장되지 않아 동기화할 때마다 모든 목록이 사라진다.
+         * 전에 됬던 기능인데 갑자기 안되서 임시방편으로 항상 모든 목록을 불러오도록 수정
+         * 
+         * TODO: useCallback 제거 등 프론트 코드를 정리한 후 반드시 고칠 것.
+         */
+        //let syncList = noticeList.concat(result.noticeList);
+        setNoticeList(result.noticeList);
       }
 
       // 동기화 시간 갱신
@@ -287,7 +289,7 @@ function UserInfoItem(props) {
       document.getElementById("msgDiv").innerHTML = msg;
 
       return viewSignIn();
-    })
+    });
   }, [props, viewSignIn, noticeList]);
 
   /**
@@ -355,6 +357,7 @@ function UserInfoItem(props) {
       alert(result.msg);
 
       // TODO : 알림함 갱신
+      getNoticeList();
     })
     .catch(e=> {
       let msg = "";
@@ -378,7 +381,7 @@ function UserInfoItem(props) {
         signOut();
       }
     });
-  }, [props, signOut]);
+  }, [props, signOut, getNoticeList]);
 
   /**
    * 알림 삭제
@@ -450,23 +453,17 @@ function UserInfoItem(props) {
   // 렌더가 완료된 후 호출되는 콜백함수
   // componentDidMount + componentDidUpdate = useEffect
   useEffect(() => {
+    console.log('user Effect!');
     // 렌더링 안에서 인터벌을 실행할 경우
     // 사용자 정보 조회 -> 조회된 정보로 rerendering -> 다시 인터벌 시작
     // 위 과정으로 인해 무한루프가 발생한다.
     // 이를 막기 위해 렌더링 안에서 re rendering이 발생할 수 있는 setState 는 하지 않는다.
     if (props.isStart) {
       // TODO: 화면이 렌더링될 때마다 해당 메소드가 실행된다. 인터벌을 관리할 컴포넌트가 따로 있어야될 듯 하다.
-
-      if (!Util.isStartedInterval('getLoginUserInfo')){
-        Util.startInterval(60, getLoginUserInfo, 'getLoginUserInfo');
-      }      
-
-      // 사용자 정보가 있어야 알림함을 동기화할 수 있기 때문에 일정 시간 뒤에 인터벌이 실행되도록 한다.
-      if (userId!=='' && !Util.isStartedInterval('getNoticeList')){
-        setTimeout(Util.startInterval(10, getNoticeList, 'getNoticeList'), 1500);
-      }
+      Util.startInterval(60, getLoginUserInfo, 'getLoginUserInfo');
+      setTimeout(Util.startInterval(10, getNoticeList, 'getNoticeList'), 1500);
     }
-  }, [props, getLoginUserInfo, getNoticeList, userId, noticeSyncTime]);
+  }, []); // 의존성을 제거하여 최초 진입 시, 한번만 실행된 이후 props 의 값이 변경된다하더라도 useEffect() 가 실행되지 않도록 한다.
 
   // 프로젝트 목록
   const li_pjtList = pjtList.map((pjtName, i) => (
