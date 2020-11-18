@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect } from "react";
 import axios from "axios";
 import "./commonCSS.css";
 
 function SignInForm(props) {
   // 로그인 기능
-  const signIn = useCallback(() => {
+  const signIn = () => {
     let elem_userId = document.getElementById("user_id");
     let elem_userPwd = document.getElementById("user_pwd");
 
@@ -56,7 +56,7 @@ function SignInForm(props) {
 
         return console.error(error);
       });
-  }, [props]);
+  };
 
   // 렌더가 완료된 후 호출되는 콜백함수
   // componentDidMount + componentDidUpdate = useEffect

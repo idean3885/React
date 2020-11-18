@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./commonCSS.css";
 import Util from "./Util";
@@ -18,7 +18,7 @@ function GroupItem(props) {
   let [value_syncBoard, setValue_syncBoard] = useState("게시글 동기화 시작");
 
   // 그룹멤버 추가
-  const addGrpMember = useCallback(() => {
+  const addGrpMember = () => {
     let elem_memberId = document.getElementById("input_grpMemberId");
     const memberId = elem_memberId !== undefined ? elem_memberId.value : "";
 
@@ -72,10 +72,10 @@ function GroupItem(props) {
 
         return console.error(error);
       });
-  }, [props, pjtName, grpName, grpMember]);
+  };
 
   // 게시글 추가
-  const addPost = useCallback(() => {
+  const addPost = () => {
     let contents = document.getElementById("board_contents");
 
     if (contents === null || contents.value === "") {
@@ -124,31 +124,28 @@ function GroupItem(props) {
 
         return console.error(error);
       });
-  }, [props, pjtName, grpName]);
+  };
 
   // 동기화 인터벌 토글
-  const toggleSyncInterval = useCallback(
-    (cb) => {
-      const key = "syncBoard"; // 함수 이름을 타이머아이디로 설정
-      const timerId = Util.timerObj[key];
+  const toggleSyncInterval = (cb) => {
+    const key = "syncBoard"; // 함수 이름을 타이머아이디로 설정
+    const timerId = Util.timerObj[key];
 
-      if (timerId === undefined && grpName !== null) {
-        Util.startInterval(1, cb, key);
-        setValue_syncBoard("게시글 동기화 중지");
-      } else if (timerId) {
-        Util.stopInterval(key);
-        setValue_syncBoard("게시글 동기화 시작");
-      } else {
-        Util.stopInterval(key);
-        alert("그룹이 선택되지 않았습니다. 그룹 선택 후 다시 시도해주십시오.");
-      }
-    },
-    [grpName]
-  );
+    if (timerId === undefined && grpName !== null) {
+      Util.startInterval(1, cb, key);
+      setValue_syncBoard("게시글 동기화 중지");
+    } else if (timerId) {
+      Util.stopInterval(key);
+      setValue_syncBoard("게시글 동기화 시작");
+    } else {
+      Util.stopInterval(key);
+      alert("그룹이 선택되지 않았습니다. 그룹 선택 후 다시 시도해주십시오.");
+    }
+  };
 
   // 게시글 동기화
 
-  const syncBoard = useCallback(() => {
+  const syncBoard = () => {
     const { apiUrl } = props;
 
     axios({
@@ -234,7 +231,7 @@ function GroupItem(props) {
 
         return console.error(error);
       });
-  }, [props, pjtName, grpName]);
+  };
 
   useEffect(() => {
     // 게시글 내용 이벤트 등록

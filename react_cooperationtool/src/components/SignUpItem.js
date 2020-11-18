@@ -1,13 +1,13 @@
-import React, { useCallback } from "react";
+import React from "react";
 import axios from "axios";
 import "./commonCSS.css";
 
 function SignUpItem(props) {
-  const viewSignIn = useCallback(() => {
+  const viewSignIn = () => {
     props.viewSignIn();
-  }, [props]);
+  };
 
-  const signUp = useCallback(() => {
+  const signUp = () => {
     let user_id = document.getElementById("user_id");
     let user_pwd = document.getElementById("user_pwd");
     let user_name = document.getElementById("user_name");
@@ -55,7 +55,7 @@ function SignUpItem(props) {
 
         return console.error(error);
       });
-  }, [props, viewSignIn]);
+  };
 
   return (
     <div id="div_signUp">

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./commonCSS.css";
 
@@ -17,7 +17,7 @@ function UserInfoItem(props) {
   let [noticeSyncTime, setNoticeSyncTime] = useState('');
 
   // 로그인 화면 보기
-  const viewSignIn = useCallback(() => {
+  const viewSignIn = () => {
     // 사용자 정보 화면에 값이 남아있을 수 있기에 초기화 후 이동한다.
     setUserInfoStyle("none");
     setUserId("");
@@ -26,15 +26,15 @@ function UserInfoItem(props) {
 
     // 로그인 화면 호출
     props.viewSignIn();
-  }, [props]);
+  };
 
   // 회원가입 화면 보기
-  const viewSignUp = useCallback(() => {
+  const viewSignUp = () => {
     props.viewSignUp();
-  }, [props]);
+  };
 
   // 로그아웃 기능
-  const signOut = useCallback(() => {
+  const signOut = () => {
     const { apiUrl } = props;
 
     axios({
@@ -66,56 +66,53 @@ function UserInfoItem(props) {
 
         return (document.location.href = "/");
       });
-  }, [props]);
+  };
 
   // 프로젝트 조회
-  const viewProject = useCallback(
-    (pjtName) => {
-      const { apiUrl } = props;
+  const viewProject = (pjtName) => {
+    const { apiUrl } = props;
 
-      axios({
-        method: "post",
-        url: apiUrl + "/board/" + pjtName,
-        withCredentials: true,
+    axios({
+      method: "post",
+      url: apiUrl + "/board/" + pjtName,
+      withCredentials: true,
+    })
+      .then((res) => {
+        const result = res.data;
+        document.getElementById("msgDiv").innerHTML = result.msg;
+
+        return props.viewProject(result.pjtInfo);
       })
-        .then((res) => {
-          const result = res.data;
-          document.getElementById("msgDiv").innerHTML = result.msg;
+      .catch((error) => {
+        let msg = "";
+        const res = error?.response;
+        // then 과정에서 발생한 로직 에러 처리
+        if (error.name !== undefined && res === undefined) {
+          msg = error.name + " : " + error.message;
+        } else {
+          // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+          msg =
+            res?.data?.msg !== undefined
+              ? res.data.msg
+              : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
+        }
+        alert(msg);
+        document.getElementById("msgDiv").innerHTML = msg;
 
-          return props.viewProject(result.pjtInfo);
-        })
-        .catch((error) => {
-          let msg = "";
-          const res = error?.response;
-          // then 과정에서 발생한 로직 에러 처리
-          if (error.name !== undefined && res === undefined) {
-            msg = error.name + " : " + error.message;
-          } else {
-            // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
-            msg =
-              res?.data?.msg !== undefined
-                ? res.data.msg
-                : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
-          }
-          alert(msg);
-          document.getElementById("msgDiv").innerHTML = msg;
+        // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
+        let status = res?.status !== undefined ? res.status : 400;
 
-          // apiUrl 이 잘못되었거나, 응답 값이 잘못된 경우
-          let status = res?.status !== undefined ? res.status : 400;
+        // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
+        if (status === 405) {
+          return (document.location.href = "/");
+        }
 
-          // 권한이 없는 경우 > 토큰만료 등 로그아웃된 것으로 간주하고 메인화면으로 리다이렉트시킨다.
-          if (status === 405) {
-            return (document.location.href = "/");
-          }
-
-          return console.error(error);
-        });
-    },
-    [props]
-  );
+        return console.error(error);
+      });
+  };
 
   // 프로젝트 생성
-  const createProject = useCallback(() => {
+  const createProject = () => {
     const { apiUrl } = props;
     let elem_pjtName = document.getElementById("input_pjtName");
     const pjtName = elem_pjtName !== undefined ? elem_pjtName.value : null;
@@ -172,64 +169,64 @@ function UserInfoItem(props) {
 
         return console.error(error);
       });
-  }, [props, pjtList]);
+  };
 
   /**
    * 사용자 정보 불러오기
    * Util 에서 함수 이름으로 인터벌타이머를 관리하기 위해 map{"함수 이름": funcion()} 으로 생성함.
    */
-  const getLoginUserInfo = useCallback(() => {
-	const { apiUrl } = props;
-
-	axios({
-	  method: "post",
-	  url: apiUrl + "/auth/getLoginUser",
-	  withCredentials: true,
-	})
-	  .then((res) => {
-      const result = res.data;
-
-      // 사용자 정보가 조회된 경우(로그인한 경우)
-      const loginUser = result.userInfo;
-
-      // 화면에 보여줄 값 먼저 설정
-      setUserId(loginUser.userId);
-      setUserName(loginUser.userName);
-      setPjtList(loginUser.joinProjects);
-
-      // 설정된 값이 보여지도록 style 변경
-      setSignInStyle("none");
-      setSignUpStyle("none");
-      setSignOutStyle("block");
-      setUserInfoStyle("block");
-	  })
-	  .catch((error) => {
-      Util.stopInterval('getLoginUserInfo');  // 사용자 정보 조회
-      Util.stopInterval('getNoticeList');     // 알림함 갱신
-
-      let msg = "";
-      const res = error?.response;
-      // then 과정에서 발생한 로직 에러 처리
-      if (error.name !== undefined && res === undefined) {
-        msg = error.name + " : " + error.message;
-      } else {
-        // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
-        msg =
-        res?.data?.msg !== undefined
-          ? res.data.msg
-          : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
-      }
-      alert(msg);
-      document.getElementById("msgDiv").innerHTML = msg;
-
-      return viewSignIn();
-	  });
-  }, [props, viewSignIn]);
+  const getLoginUserInfo = () => {
+    const { apiUrl } = props;
+  
+    axios({
+      method: "post",
+      url: apiUrl + "/auth/getLoginUser",
+      withCredentials: true,
+    })
+      .then((res) => {
+        const result = res.data;
+  
+        // 사용자 정보가 조회된 경우(로그인한 경우)
+        const loginUser = result.userInfo;
+  
+        // 화면에 보여줄 값 먼저 설정
+        setUserId(loginUser.userId);
+        setUserName(loginUser.userName);
+        setPjtList(loginUser.joinProjects);
+  
+        // 설정된 값이 보여지도록 style 변경
+        setSignInStyle("none");
+        setSignUpStyle("none");
+        setSignOutStyle("block");
+        setUserInfoStyle("block");
+      })
+      .catch((error) => {
+        Util.stopInterval('getLoginUserInfo');  // 사용자 정보 조회
+        Util.stopInterval('getNoticeList');     // 알림함 갱신
+  
+        let msg = "";
+        const res = error?.response;
+        // then 과정에서 발생한 로직 에러 처리
+        if (error.name !== undefined && res === undefined) {
+          msg = error.name + " : " + error.message;
+        } else {
+          // 응답 데이터 양식 : {msg: "xxx", ...} => msg 값이 무조건 전달되도록 api 서버 설정함.
+          msg =
+          res?.data?.msg !== undefined
+            ? res.data.msg
+            : "API서버가 응답하지 않거나 응답데이터(resposeData)가 올바르지 않습니다.\n API서버 상태 및 기능 확인하시기 바랍니다.";
+        }
+        alert(msg);
+        document.getElementById("msgDiv").innerHTML = msg;
+  
+        return viewSignIn();
+      });
+    };
 
   /**
    * 알림함 갱신
    */
-  const getNoticeList = useCallback(()=> {
+  const getNoticeList = ()=> {
     const { apiUrl } = props;
 
     const el_noticeSyncTime = document.getElementById('lbl_noticeSyncTime').innerHTML;
@@ -290,12 +287,12 @@ function UserInfoItem(props) {
 
       return viewSignIn();
     });
-  }, [props, viewSignIn, noticeList]);
+  };
 
   /**
    * 프로젝트 초대 수락
    */
-  const joinPjt = useCallback((bodyData)=> {
+  const joinPjt = (bodyData)=> {
     const {apiUrl} = props;
     const {pjtName} = bodyData;
 
@@ -331,12 +328,12 @@ function UserInfoItem(props) {
       alert(msg);
       document.getElementById("msgDiv").innerHTML = msg;
 	  });
-  }, [props, userId, getLoginUserInfo]);
+  };
 
   /**
    * 알림 읽음 처리
    */
-  const readNotice = useCallback((bodyData)=> {
+  const readNotice = (bodyData)=> {
     const {apiUrl} = props;
     const {reg_dt} = bodyData;
 
@@ -381,12 +378,12 @@ function UserInfoItem(props) {
         signOut();
       }
     });
-  }, [props, signOut, getNoticeList]);
+  };
 
   /**
    * 알림 삭제
    */
-  const delNotice = useCallback((bodyData)=> {
+  const delNotice = (bodyData)=> {
     const {apiUrl} = props;
     const {reg_dt} = bodyData;
 
@@ -429,12 +426,12 @@ function UserInfoItem(props) {
         signOut();
       }
     });
-  }, [props, signOut]);
+  };
 
   /**
    * 알림 처리 기능
    */
-  const procNotice = useCallback((type, bodyData)=> {
+  const procNotice = (type, bodyData)=> {
     switch(type){
       case 'invitePjt': 
         joinPjt(bodyData);
@@ -448,7 +445,7 @@ function UserInfoItem(props) {
       default:
         console.log('해당되는 작업이 없습니다.');
     }
-  }, [joinPjt, readNotice, delNotice]);
+  };
 
   // 렌더가 완료된 후 호출되는 콜백함수
   // componentDidMount + componentDidUpdate = useEffect
